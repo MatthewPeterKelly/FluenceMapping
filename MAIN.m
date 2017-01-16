@@ -1,17 +1,17 @@
 % MAIN - fluence mapping
 %
-% Requires OptimTraj toolbox
+% Requires OptimTraj toolbox and ChebFun toolbox
 %
 % STATE:  (each row is scalar)
 %   x1 = leaf position
 %   x2 = leaf position
-%   T1 = leaf position inverse
-%   T2 = leaf position inverse
 %
 % CONTROL:
-%   u = dosage rate
+%   r = dosage rate
 %   v1 = leaf velocity
 %   v2 = leaf velocity
+%   T1 = leaf position inverse
+%   T2 = leaf position inverse
 %
 % DYNAMICS:
 %   (d/dt) x1 = v1
@@ -34,6 +34,15 @@
 % OBJECTIVE:
 %   minimize integral (g(x) - f(x))^2
 %   f(x) is given
-%   g(x) = integral u(t) dt from T1(x) to T2(x)
+%   g(x) = integral r(t) dt from T1(x) to T2(x)
 %
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~% 
+
+clc; clear; 
+addpath ~/Git/OptimTraj
+addpath ~/Git/chebFun
+
+%%%% Set up a test function to fit:
+% f(x) = cos(pi*x/2)
+fx = @(x)( cos(0.5*pi*x) );
 
