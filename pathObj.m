@@ -40,8 +40,8 @@ end
 x1 = x(1,:);
 x2 = x(2,:);
 r = u(1,:);
-v1 = u(2,:);
-v2 = u(3,:);
+% v1 = u(2,:);
+% v2 = u(3,:);
 T1 = u(4,:);
 T2 = u(5,:);
 
@@ -60,8 +60,29 @@ t2Fit = bary(x2Fit,T2);
 invFit = w*( (tFit - t1Fit).^2 + (tFit - t2Fit).^2 );
 
 %%%% Now compute the primary objective function:
-% Compute the inner integral in this function, then let the software
-% compute the outer integral.
-%
+% The integrand is itself an integral (the objective function contains a
+% complicated double integral).   
+
+xCheb  = chebPts(nTime,xBnd(1), xBnd(2));
+tLow = bary(xCheb,T1);
+tUpp = bary(xCheb,t2);
+
+% Loop over each point in the trajectory to compute integrand:
+gx = zeros(1,nTime);
+for i=1:nTime
+   [tCheb, wCheb] = chebPts(nTime, tLow(i), tUpp(i));
+   rCheb = bary(tCheb,r);
+   gx(i) =  sum(wCheb.*rCheb);  %Integral from tLow to tUpp of r(t) dt
+end
+
+% Now compare fx and gx;
+err = gx - fx(xCheb);
+
+% Pack up into the expression for the integrand. Note that we are doing a
+% sort of bad thing: integrating err wrt time, even though it is a function
+% of position. This works out in the end because we have sampled both the
+% same way. It means that the solution will be off by some scalar multiple,
+% but this is easily corrected for in a future version of this work.
+dObj = err.^2 + invFit;
 
 end

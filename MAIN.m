@@ -42,7 +42,36 @@ clc; clear;
 addpath ~/Git/OptimTraj
 addpath ~/Git/chebFun
 
+%%%% Problem parameters:
+nCheb = 11;   % Order of the fitting polynomial
+nFit = 3*nCheb;  % Number of points for best-fit curve
+tBnd = [0,1];
+xBnd = [-1,1];
+
 %%%% Set up a test function to fit:
 % f(x) = cos(pi*x/2)
 fx = @(x)( cos(0.5*pi*x) );
+
+%%%% Set up the user-defined functions for the optimization:
+problem.func.dynamics = @dynamics;
+problem.func.pathObj = @(t,x,u)( pathObj(t,x,u,fx,w,xBnd,nFit) );
+
+%%%% set up the bounds for the problem:
+problem.bounds.initialTime.low = tBnd(1);
+problem.bounds.initialTime.lupp = tBnd(1);
+problem.bounds.finalTime.low = tBnd(end);
+problem.bounds.finalTime.lupp = tBnd(end);
+problem.bounds.initialState.low = [1;1]*xBnd(1);   %[x1;x2]
+problem.bounds.initialState.lupp = [1;1]*xBnd(1);
+problem.bounds.finalState.low = [1;1]*xBnd(end);
+problem.bounds.finalState.lupp = [1;1]*xBnd(end);
+problem.bounds.state.low = [1;1]*xBnd(1);
+problem.bounds.state.upp = [1;1]*xBnd(end);
+problem.bounds.control.low = [zeros(3,1); tBnd(1)*ones(2,1)];
+problem.bounds.control.upp = [inf(3,1); tBnd(end)*ones(2,1)];
+
+%%%% Set up an initial guess:
+
+
+
 
