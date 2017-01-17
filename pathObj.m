@@ -31,7 +31,7 @@ function dObj = pathObj(t,x,u,fx,w,xBnd,nFit)
 % Check that we only use this with the chebyshev method:
 tBnd = t([1,end]);
 nTime = length(t);
-tCheck = chebPts(nTime,tBnd);
+tCheck = chebyshevPoints(nTime,tBnd);
 if any(abs(tCheck - t) > 1e-12)
     error('This function can only be called with a Chebyshev time grid!');
 end
@@ -48,41 +48,44 @@ T2 = u(5,:);
 %%%% Compute the inverse functions:
 
 % Compute the functions to interpolate each position trajectory:
-tFit = chePts(nFit,tBnd);
-x1Fit = bary(tFit,x1);
-x2Fit = bary(tFit,x2);
+[tFit, tFitWeights] = chebyshevPoints(nFit,tBnd); 
+x1Fit = chebyshevInterpolate(x1,tFit,tBnd);  % x1(t)
+x2Fit = chebyshevInterpolate(x2,tFit,tBnd);  % x2(t)
 
 % Compute the functions to interpolate position back to time:
-t1Fit = bary(x1Fit,T1);
-t2Fit = bary(x2Fit,T2);
+t1Fit = chebyshevInterpolate(T1,x1Fit,xBnd);  % T1(x1)
+t2Fit = chebyshevInterpolate(T2,x2Fit,xBnd);  % T2(x2)
 
 % Compute the penalty for inverse function fitting:
 invFit = w*( (tFit - t1Fit).^2 + (tFit - t2Fit).^2 );
+invFitSum = sum(tFitWeights.*invFit);
 
 %%%% Now compute the primary objective function:
 % The integrand is itself an integral (the objective function contains a
 % complicated double integral).   
 
-xCheb  = chebPts(nTime,xBnd(1), xBnd(2));
-tLow = bary(xCheb,T1);
-tUpp = bary(xCheb,t2);
+[xCheb, xChebWeights] = chebyshevPoints(nTime,xBnd);
+tLow = chebyshevInterpolate(T1,xCheb,xBnd);
+tUpp = chebyshevInterpolate(T2,xCheb,xBnd);
 
 % Loop over each point in the trajectory to compute integrand:
 gx = zeros(1,nTime);
 for i=1:nTime
-   [tCheb, wCheb] = chebPts(nTime, tLow(i), tUpp(i));
-   rCheb = bary(tCheb,r);
-   gx(i) =  sum(wCheb.*rCheb);  %Integral from tLow to tUpp of r(t) dt
+    if tLow(i) >= tUpp(i)
+        gx(i) = 0.0;   
+        warning('Invalid inverse time');
+    else
+       [tCheb, wCheb] = chebyshevPoints(nTime, [tLow(i), tUpp(i)]);
+       rCheb = chebyshevInterpolate(r,tCheb,[tLow(i), tUpp(i)]);
+       gx(i) =  sum(wCheb.*rCheb);  %Integral from tLow to tUpp of r(t) dt
+    end
 end
 
 % Now compare fx and gx;
 err = gx - fx(xCheb);
+fittingError = sum(xChebWeights.*err);
 
-% Pack up into the expression for the integrand. Note that we are doing a
-% sort of bad thing: integrating err wrt time, even though it is a function
-% of position. This works out in the end because we have sampled both the
-% same way. It means that the solution will be off by some scalar multiple,
-% but this is easily corrected for in a future version of this work.
-dObj = err.^2 + invFit;
+% Sum up the objective function:
+dObj = ones(size(t))*(fittingError + w*invFitSum);
 
 end
