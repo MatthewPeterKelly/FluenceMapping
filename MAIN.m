@@ -18,18 +18,21 @@
 %   (d/dt) x2 = v2
 %
 % PATH CONSTRAINTs:     (Treated as best-fit soft constraint)
-%   0 = t - T1(x1(t))
+%   0 = t - T1(x1(t))   % Solve inverse equations
 %   0 = t - T2(x2(t))
+%   T1 - T2 > tTol    % prevent singularity in integral expression
+%   x2 - x1 > xTol   % 
+%
 %
 % BOUNDS:
-%   -1 < x1 < 1
-%   -1 < x2 < 1
-%   0 < T1 < 1
-%   0 < T2 < 1
-%   0 < u
-%   0 < v1
-%   0 < v2
-%   0 < t < 1
+%   xLow < x1 < xUpp
+%   xLow < x2 < xUpp
+%   tLow < T1 < tUpp
+%   tLow < T2 < tUpp
+%   0 < r < rMax
+%   0 < v1 < vMax
+%   0 < v2 < vMax
+%   tLow < t < tUpp
 %
 % OBJECTIVE:
 %   minimize integral (g(x) - f(x))^2
@@ -38,6 +41,8 @@
 %
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~% 
 
+warning('There still seems to be some numerical issue here...');
+
 clc; clear; 
 addpath ~/Git/OptimTraj
 addpath ~/Git/chebFun
@@ -45,43 +50,51 @@ addpath ~/Git/ChebyshevPolynomials
 
 %%%% Problem parameters:
 nCheb = 11;   % Order of the fitting polynomial
-nFit = 3*nCheb;  % Number of points for best-fit curve
-tBnd = [0,1];
-xBnd = [-1,1];
-w = 100;   % Weight on inverse fitting solver
+invFitGridCount = 3*nCheb;  % Number of points for inverse fitting 
+invFitWeight = 100;   % Weight on inverse fitting solver
+xLow = -1;
+xUpp = 1;
+tLow = 0;
+tUpp = 1;
+rMax = 10;
+vMax = 5;
+xTol = 0.05*(xUpp - xLow);
+tTol = 0.05*(tUpp - tLow);
+vTol = xTol / tTol;
 
 %%%% Set up a test function to fit:
 % f(x) = cos(pi*x/2)
 fx = @(x)( cos(0.5*pi*x) );
 
+%%%% Create a struct with all problem parameters
+P = makeStruct(nCheb, invFitGridCount,invFitWeight, ...
+               xLow,xUpp,tLow,tUpp,rMax,vMax,xTol,tTol,vTol,fx);
+
 %%%% Set up the user-defined functions for the optimization:
 problem.func.dynamics = @dynamics;
-problem.func.pathObj = @(t,x,u)( pathObj(t,x,u,fx,w,xBnd,nFit) );
-
-% TODO:  Add path constraint that x2 - x1 > tol
-% TODO:  Add path bound that v1 > tol, v2 > tol
-% TODO:  Add path constraint that T2 -T1 > tol
+problem.func.pathObj = @(t,x,u)( pathObj(t,x,u,P) );
+problem.func.pathCst = @(t,x,u)( pathCst(t,x,u,P) );
 
 %%%% set up the bounds for the problem:
-problem.bounds.initialTime.low = tBnd(1);
-problem.bounds.initialTime.upp = tBnd(1);
-problem.bounds.finalTime.low = tBnd(end);
-problem.bounds.finalTime.upp = tBnd(end);
-problem.bounds.initialState.low = [1;1]*xBnd(1);   %[x1;x2]
-problem.bounds.initialState.upp = [1;1]*xBnd(1);
-problem.bounds.finalState.low = [1;1]*xBnd(end);
-problem.bounds.finalState.upp = [1;1]*xBnd(end);
-problem.bounds.state.low = [1;1]*xBnd(1);
-problem.bounds.state.upp = [1;1]*xBnd(end);
-problem.bounds.control.low = [zeros(3,1); tBnd(1)*ones(2,1)];
-problem.bounds.control.upp = [inf(3,1); tBnd(end)*ones(2,1)];
+problem.bounds.initialTime.low = tLow;
+problem.bounds.initialTime.upp = tLow+tTol;
+problem.bounds.finalTime.low = tUpp-tTol;
+problem.bounds.finalTime.upp = tUpp;
+problem.bounds.state.low = [xLow; xLow];
+problem.bounds.state.upp = [xUpp; xUpp];
+problem.bounds.control.low = [0;0;0;tLow;tLow];  % [r,v1,v2,T1,T2]
+problem.bounds.control.upp = [rMax;vMax;vMax;tUpp;tUpp];
 
 %%%% Set up an initial guess:
-problem.guess.time = tBnd;
-problem.guess.state = [1;1]*xBnd;
-problem.guess.control = [ones(3,2); [1;1]*tBnd];
-
-% TODO:  Better initial guess S.T. inverse functions are correct
+tGuess = [tLow+0.5*tTol, tUpp-0.5*tTol];
+problem.guess.time = tGuess;
+z0 = [xLow+0.1*xTol;xLow+2*xTol];
+zF = [xUpp-2*xTol;xUpp-0.1*xTol];
+problem.guess.state = [z0, zF];
+vGuess = (xUpp-xLow)/(tUpp-tLow);
+u0 = [0.1*rMax; vGuess; vGuess; tLow+0.5*tTol; tLow+0.5*tTol];
+uF = [0.1*rMax; vGuess; vGuess; tUpp-0.5*tTol; tUpp-0.5*tTol];
+problem.guess.control = [u0,uF];
 
 %%%% OptimTraj options:
 problem.options.method = 'chebyshev';
