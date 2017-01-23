@@ -19,8 +19,13 @@ function dObj = pathObj(t,x,u,P)
 %   v1 = leaf velocity
 %   v2 = leaf velocity
 %
+% NOTES:
+%   minimize integral { f(x) - g(x) }.^2
+%   f(x) is given
+%   g(x) = integral { r(t)*k(t,x) } 
+%       where k(t,x) is xLow(t) < x < xUpp(t)
 
-% Unpack the state and control:
+% Unpack the state and control:   (all functions of time)
 x1 = x(1,:);
 x2 = x(2,:);
 r = u(1,:);
@@ -29,53 +34,32 @@ r = u(1,:);
 nx = P.nGridPos;
 nt = P.nGridTime;
 
-warning('This function is incomplete')
-
-% TODO:  This implementation is close, but not quite right. I'm pretty sure
-% that it will work though. There are two changes to be made. First, we
-% will need to replace the boolean mask with a smoooth mask. This can be
-% done by multiplying the result of two smooth functions, one for the upper
-% bound and one for the lower bound. The functions can operate on the x1-x
-% and x2-x values. Next, I need to make sure that the discretization logic
-% is right. I think that there is a small bug in how I'm breaking up the
-% double integral.
-
-% TODO: implement the function smoothWindow() below:
-test = smoothWindow(xLow,x,xUpp,alpha);
-
-% Discretization:
+% Discretization:  (for approximating g(x))
 tLow = t(1); tUpp = t(end);
 tGrid = linspace(tLow, tUpp, nt);
 xGrid = linspace(P.xLow, P.xUpp, nx);
 
-% Interpolate trajectory:
+% Compute discretization of position   (for approximating g(x))
 rGrid = interp1(t',r',tGrid')';
 x1Grid = interp1(t',x1',tGrid')';
 x2Grid = interp1(t',x2',tGrid')';
 
-% Build a big matrix for the double integral:
-X1 = ones(nt,1)*x1Grid;
-X2 = ones(nt,1)*x2Grid;
-X = ones(nt,1)*xGrid;
-R = rGrid'*ones(1,nx);
+% Rewrite as matricies for vector operations:
+R_grid = ones(nx,1)*rGrid;
+X1_grid = ones(nx,1)*x1Grid;
+X2_grid = ones(nx,1)*x2Grid;
+X_grid = xGrid'*ones(1,nt);
 
-% Remove elements that are blocked by leaves
-% TODO:  replace this with a smooth approximation of the if statement
-mask = true(size(R));
-mask(X<X1) = false;
-mask(X>X2) = false;
-R(~mask) = 0; 
-
-% Compute the inner integral
-dt = (tUpp-tLow)/nt;
-Gx = dt*sum(R,1);
-Fx = P.fx(xGrid);
-
-% Compute the outer integral
-dx = (xUpp-xLow)/nx;
-fitErr = dx*sum((Fx-Gx).^2);
+% Compute integrals
+k = smoothWindow(X1_grid, X_grid, X2_grid, P.alpha);
+dt = (tUpp - tLow)/(nt-1);
+Gx = dt*sum(k.*R_grid,2);
+Fx = P.fx(xGrid');
+dx = (P.xUpp - P.xLow)/(nx-1);
+err = (Gx-Fx).^2;
+Jx = dx*sum(err);
 
 % Convert to an integrand in time to make the solver happy.
-dObj = fitErr*ones(size(t))/(tUpp-tLow);
+dObj = Jx*ones(size(t))/(tUpp-tLow);
 
 end

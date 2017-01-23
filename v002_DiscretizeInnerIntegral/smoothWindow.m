@@ -47,7 +47,7 @@ xPad = 0.5*sum(xBnd) + diff(xBnd)*[-1,1];
 xLow = xBnd(1)*ones(1,n);
 xUpp = xBnd(2)*ones(1,n);
 x = linspace(xPad(1), xPad(2),n);
-alpha = 0.03;
+alpha = 0.02;
 [z, zBool] = smoothWindow(xLow, x, xUpp, alpha);
 
 figure(14); clf; hold on;

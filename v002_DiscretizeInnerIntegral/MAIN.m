@@ -38,23 +38,23 @@ addpath ~/Git/OptimTraj
 addpath ~/Git/chebFun
 addpath ~/Git/ChebyshevPolynomials
 
-%%%% Problem parameters:
-nGridTraj = 11;   % Order of the fitting polynomial
-nGridPos = 20;  % Discretization for position-integral in objective
-nGridTime = 50;  % Discretization for time-integral in objective
+%% %% Problem parameters:
+nGridPos = 80;  % Discretization for position-integral in objective
+nGridTime = 90;  % Discretization for time-integral in objective
 xLow = -1;
 xUpp = 1;
 tLow = 0;
 tUpp = 1;
 rMax = 10;
 vMax = 5;
+alpha = 0.05;  %smoothing for integral approximation
 
 %%%% Set up a test function to fit:
 fx = @(x)( cos(0.5*pi*x) );
 
 %%%% Create a struct with all problem parameters
-P = makeStruct(nGridTraj, nGridPos, nGridTime,...
-    xLow, xUpp, tLow, tUpp, rMax, vMax,fx);
+P = makeStruct(nGridPos, nGridTime,...
+    xLow, xUpp, tLow, tUpp, rMax, vMax,fx,alpha);
 
 %%%% Set up the user-defined functions for the optimization:
 problem.func.dynamics = @dynamics;
@@ -79,9 +79,43 @@ problem.guess.state = [x1Guess; x2Guess];
 problem.guess.control = zeros(3,2);
 
 %%%% OptimTraj options:
-problem.options.method = 'trapezoid';
-problem.options.trapezoid.nGrid = nGridTraj;
+problem.options(1).method = 'trapezoid';
+problem.options(1).trapezoid.nGrid = 11;
+problem.options(2).method = 'trapezoid';
+problem.options(2).trapezoid.nGrid = 21;
 
-%%%% Solve!
+%% %% Solve!
 soln = optimTraj(problem);
+
+%% %% Plots:
+
+figure(1); clf;
+
+S = soln(end);
+
+tGrid = S.grid.time;
+xGrid = S.grid.state;
+uGrid = S.grid.control;
+
+t = linspace(tGrid(1), tGrid(end), 200);
+x = S.interp.state(t);
+u = S.interp.control(t);
+
+subplot(2,1,1); hold on
+plot(t,x(1,:),'r','LineWidth',2);
+plot(t,x(2,:),'b','LineWidth',2);
+plot(tGrid,xGrid(1,:),'ro','LineWidth',2);
+plot(tGrid,xGrid(2,:),'bo','LineWidth',2);
+xlabel('time');
+ylabel('leaf position');
+legend('Leaf One','Leaf Two');
+title('Optimal Solution')
+
+subplot(2,1,2); hold on;
+plot(t,u(1,:),'k','LineWidth',2)
+plot(tGrid, uGrid(1,:),'ko','LineWidth',2);
+xlabel('time')
+ylabel('fluence dose')
+
+
 
