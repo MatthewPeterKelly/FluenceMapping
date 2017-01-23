@@ -62,6 +62,8 @@ dx = (P.xUpp - P.xLow)/(nx-1);
 err = (Gx-Fx).^2;
 Jx = dx*sum(err);
 
+warning('These integrals are not computed correctly! Use the trapezoid rule correctly.');
+
 % Convert to an integrand in time to make the solver happy.
 dObj = Jx*ones(size(t))/(tUpp-tLow);
 
