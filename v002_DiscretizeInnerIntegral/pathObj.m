@@ -1,4 +1,4 @@
-function dObj = pathObj(t,x,u,P)
+function [dObj, Fx, Gx, Xx] = pathObj(t,x,u,P)
 % function dObj = pathObj(t,x,u,P)
 %
 % INPUTS:
@@ -9,6 +9,9 @@ function dObj = pathObj(t,x,u,P)
 %
 % OUTPUTS:
 %   dObj = [1, nTime] = integrand of the objective function
+%   Gx = [nx, 1] = Estimated fluence map for the trajectory
+%   Fx = [nx, 1] = Desired fluence map for the trajectory
+%   Xx = [nx, 1] = test positions for fluence map
 %
 % STATE:  (each row is scalar)
 %   x1 = leaf position
@@ -37,7 +40,7 @@ nt = P.nGridTime;
 % Discretization:  (for approximating g(x))
 tLow = t(1); tUpp = t(end);
 tGrid = linspace(tLow, tUpp, nt);
-xGrid = linspace(P.xLow, P.xUpp, nx);
+Xx = linspace(P.xLow, P.xUpp, nx);
 
 % Compute discretization of position   (for approximating g(x))
 rGrid = interp1(t',r',tGrid')';
@@ -48,13 +51,13 @@ x2Grid = interp1(t',x2',tGrid')';
 R_grid = ones(nx,1)*rGrid;
 X1_grid = ones(nx,1)*x1Grid;
 X2_grid = ones(nx,1)*x2Grid;
-X_grid = xGrid'*ones(1,nt);
+X_grid = Xx'*ones(1,nt);
 
 % Compute integrals
 k = smoothWindow(X1_grid, X_grid, X2_grid, P.alpha);
 dt = (tUpp - tLow)/(nt-1);
 Gx = dt*sum(k.*R_grid,2);
-Fx = P.fx(xGrid');
+Fx = P.fx(Xx');
 dx = (P.xUpp - P.xLow)/(nx-1);
 err = (Gx-Fx).^2;
 Jx = dx*sum(err);

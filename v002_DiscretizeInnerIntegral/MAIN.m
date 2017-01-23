@@ -32,6 +32,24 @@
 %
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~% 
 
+%%%% NOTES:
+%
+% This method seems to work reasonably well. If converges to a solution for
+% a simple test case.
+%
+% I see two potential problems with this: First, the convergence is not
+% great, indicating that there is still some sort of problem with the way
+% that the problem is posed.
+%
+% The other problem is that the fluence dose is changing rapidly. This is
+% ok, but I think that it causes the solution to be slightly non-unique. 
+%
+% Running with different initial grids seems to generate a variety of
+% solutions, which suggest that the solution is non-unique. 
+%
+% It also looks like there might be an error in the calculation of the
+% fluence profile - need to check up on this.
+%
 
 clc; clear; 
 addpath ~/Git/OptimTraj
@@ -80,9 +98,9 @@ problem.guess.control = zeros(3,2);
 
 %%%% OptimTraj options:
 problem.options(1).method = 'trapezoid';
-problem.options(1).trapezoid.nGrid = 11;
+problem.options(1).trapezoid.nGrid = 5;
 problem.options(2).method = 'trapezoid';
-problem.options(2).trapezoid.nGrid = 21;
+problem.options(2).trapezoid.nGrid = 11;
 
 %% %% Solve!
 soln = optimTraj(problem);
@@ -96,12 +114,13 @@ S = soln(end);
 tGrid = S.grid.time;
 xGrid = S.grid.state;
 uGrid = S.grid.control;
+[~, Fx, Gx, Xx] = pathObj(tGrid,xGrid,uGrid,P);
 
-t = linspace(tGrid(1), tGrid(end), 200);
+t = linspace(tGrid(1), tGrid(end), 4*(length(tGrid)-1)+1);
 x = S.interp.state(t);
 u = S.interp.control(t);
 
-subplot(2,1,1); hold on
+subplot(2,2,1); hold on
 plot(t,x(1,:),'r','LineWidth',2);
 plot(t,x(2,:),'b','LineWidth',2);
 plot(tGrid,xGrid(1,:),'ro','LineWidth',2);
@@ -111,11 +130,25 @@ ylabel('leaf position');
 legend('Leaf One','Leaf Two');
 title('Optimal Solution')
 
-subplot(2,1,2); hold on;
+subplot(2,2,3); hold on;
 plot(t,u(1,:),'k','LineWidth',2)
 plot(tGrid, uGrid(1,:),'ko','LineWidth',2);
 xlabel('time')
 ylabel('fluence dose')
 
+subplot(2,2,2); hold on;
+plot(Xx, Fx, 'k--','LineWidth',2);
+plot(Xx, Gx, 'g-','LineWidth',2);
+xlabel('position')
+ylabel('fluence')
+legend('target','estimated')
+title('Fluence Fitting')
+
+subplot(2,2,4); hold on;
+plot(Xx, Fx-Gx, 'k--','LineWidth',2);
+xlabel('position')
+ylabel('fluence error')
+title('fitting error')
+title(['MSE: ' num2str(S.info.objVal)]);
 
 
