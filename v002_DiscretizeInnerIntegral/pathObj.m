@@ -62,7 +62,16 @@ dx = (P.xUpp - P.xLow)/(nx-1);
 err = (Gx-Fx).^2;
 Jx = dx*sum(err);
 
-warning('These integrals are not computed correctly! Use the trapezoid rule correctly.');
+warning('There is a logical flaw in this integrator')
+
+% AH-HA!   Found the problem: I'm not inverting the linear
+% approximation of the function - I'm inverting the zero order hold,
+% which cases all sorts of bad non-smoothness in the solution. It is
+% critical that we invert the linear interpolation correctly. We
+% essientially need to find all roots of the interpolation (places
+% where it crosses the desired leaf position) and then use this to
+% compute the exact duration that each region is exposed to the
+% radiation. I think that the smoothing will not be necessary then.
 
 % Convert to an integrand in time to make the solver happy.
 dObj = Jx*ones(size(t))/(tUpp-tLow);
