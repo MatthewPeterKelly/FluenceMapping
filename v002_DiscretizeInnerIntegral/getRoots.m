@@ -2,7 +2,8 @@ function [tBnd, isPos] = getRoots(t,x)
 % [tBnd, isPos] = getRoots(t,x)
 %
 % Given a function x(t) on a grid, compute the roots assuming linear
-% interpolation between the discrete samples.
+% interpolation between the discrete samples. Return a data structure that
+% gives the time-span for positive and negative segments.
 %
 % INPUTS:
 %   t = [1, n] = time grid
@@ -37,11 +38,13 @@ xRootUpp = x(rootIdx + 1);
 % A = (xLow - xUpp)./(tLow-tUpp);
 % B = xLow - A*tLow;
 
-% TODO:  check for divide by zero!!
-
 A = (xRootLow - xRootUpp)./(tRootLow-tRootUpp);
 B = xRootLow - A.*tRootLow;
 tRoot = -B./A;
+
+% Handle divide-by-zero case:
+isNan = isnan(tRoot); tRootMid = 0.5*(tRootLow + tRootUpp);
+tRoot(isNan) = tRootMid(isNan);
 tRoot = unique([t(1), tRoot, t(end)]);
 
 tBnd = [tRoot(1:(end-1))', tRoot(2:end)'];
