@@ -35,45 +35,18 @@ r = u(1,:);
 
 % Parameters:
 nx = P.nGridPos;
-nt = P.nGridTime;
+xBnd = [P.xLow, P.xUpp];
 
-% Discretization:  (for approximating g(x))
-tLow = t(1); tUpp = t(end);
-tGrid = linspace(tLow, tUpp, nt);
-Xx = linspace(P.xLow, P.xUpp, nx);
+% Compute fluence profile:
+[Gx, Xx] = getFluenceProfile(t, x1, x2, r, xBnd, nx);
+Fx = P.fx(Xx);
 
-% Compute discretization of position   (for approximating g(x))
-rGrid = interp1(t',r',tGrid')';
-x1Grid = interp1(t',x1',tGrid')';
-x2Grid = interp1(t',x2',tGrid')';
-
-% Rewrite as matricies for vector operations:
-R_grid = ones(nx,1)*rGrid;
-X1_grid = ones(nx,1)*x1Grid;
-X2_grid = ones(nx,1)*x2Grid;
-X_grid = Xx'*ones(1,nt);
-
-% Compute integrals
-k = smoothWindow(X1_grid, X_grid, X2_grid, P.alpha);
-dt = (tUpp - tLow)/(nt-1);
-Gx = dt*sum(k.*R_grid,2);
-Fx = P.fx(Xx');
+% Compute integral:
 dx = (P.xUpp - P.xLow)/(nx-1);
 err = (Gx-Fx).^2;
 Jx = dx*sum(err);
 
-warning('There is a logical flaw in this integrator')
-
-% AH-HA!   Found the problem: I'm not inverting the linear
-% approximation of the function - I'm inverting the zero order hold,
-% which cases all sorts of bad non-smoothness in the solution. It is
-% critical that we invert the linear interpolation correctly. We
-% essientially need to find all roots of the interpolation (places
-% where it crosses the desired leaf position) and then use this to
-% compute the exact duration that each region is exposed to the
-% radiation. I think that the smoothing will not be necessary then.
-
 % Convert to an integrand in time to make the solver happy.
-dObj = Jx*ones(size(t))/(tUpp-tLow);
+dObj = Jx*ones(size(t))/(P.tUpp-P.tLow);
 
 end

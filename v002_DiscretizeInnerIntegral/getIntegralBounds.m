@@ -16,6 +16,7 @@ function tBnd = getIntegralBounds(t, xLow, xMid, xUpp)
 
 if nargin == 0
     getIntegralBounds_test();
+    return;
 end
 
 x1 = xMid - xLow;
