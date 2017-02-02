@@ -34,21 +34,6 @@
 
 %%%% NOTES:
 %
-% This method seems to work reasonably well. If converges to a solution for
-% a simple test case.
-%
-% I see two potential problems with this: First, the convergence is not
-% great, indicating that there is still some sort of problem with the way
-% that the problem is posed.
-%
-% The other problem is that the fluence dose is changing rapidly. This is
-% ok, but I think that it causes the solution to be slightly non-unique. 
-%
-% Running with different initial grids seems to generate a variety of
-% solutions, which suggest that the solution is non-unique. 
-%
-% It also looks like there might be an error in the calculation of the
-% fluence profile - need to check up on this.
 %
 
 clc; clear; 
@@ -65,7 +50,7 @@ tLow = 0;
 tUpp = 1;
 rMax = 10;
 vMax = 5;
-alpha = 0.05;  %smoothing for integral approximation
+alpha = 0.001;  %smoothing for integral approximation
 
 %%%% Set up a test function to fit:
 fx = @(x)( cos(0.5*pi*x) );
@@ -86,6 +71,10 @@ problem.bounds.finalTime.low = tUpp;
 problem.bounds.finalTime.upp = tUpp;
 problem.bounds.state.low = [xLow; xLow];
 problem.bounds.state.upp = [xUpp; xUpp];
+problem.bounds.initialState.low = [xLow; xLow+0.05];
+problem.bounds.initialState.upp = [xLow; xLow+0.05];
+problem.bounds.finalState.low = [xUpp-0.05; xUpp];
+problem.bounds.finalState.upp = [xUpp-0.05; xUpp];
 problem.bounds.control.low = [0;-vMax;-vMax];  % [r,v1,v22]
 problem.bounds.control.upp = [rMax;vMax;vMax];
 

@@ -49,4 +49,7 @@ Jx = dx*sum(err);
 % Convert to an integrand in time to make the solver happy.
 dObj = Jx*ones(size(t))/(P.tUpp-P.tLow);
 
+% Add regularization terms:
+dObj = dObj + P.alpha*sum(u.^2,1);
+
 end
