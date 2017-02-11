@@ -1,0 +1,8 @@
+Two example problems:   (target profiles given in .mat files)
+--> "two humps"
+--> "two dips"
+
+max leaf speed:  3 cm / sec
+max dose rate: 10 MU / sec
+
+both leaves start at x = 0 and end at x = 10
