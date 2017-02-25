@@ -1,4 +1,4 @@
-function [g, xGrid, wGrid] = getFluenceProfile(tBnd, xBnd, vLow, vUpp, rBnd, drBnd)
+function [g, xGrid, wGrid,A,B,R] = getFluenceProfile(tBnd, xBnd, vLow, vUpp, rBnd, drBnd)
 % [g, x, w] = getFluenceProfile(tBnd, xBnd, vLow, vUpp, rBnd, drBnd)
 %
 % This function computes the fluence profile Gx.
@@ -49,38 +49,18 @@ xUnit = 0.5*(1+gaussPtsUnit);  % map to [0,1]
 xGrid = xLow + (xUpp - xLow)*xUnit;  %map to [xLow, xUpp]
 wGrid = 0.5*gaussWeightsUnit*(xUpp - xLow); %map to [xLow, xUpp]
 
-% Construct the cubic hermite data for both leaf trajectories:
-tLow = tBnd(1);
-tUpp = tBnd(2);
-A.tLow = tLow;
-A.tUpp = tUpp;
-B.tLow = tLow;
-B.tUpp = tUpp;
+% Get the structs representing each time-series function
+[A,B,R] = unpackCubicFunctions(tBnd, xBnd, vLow, vUpp, rBnd, drBnd);
 
-A.xLow = xLow;
-B.xLow = xLow;
-A.xUpp = xUpp;
-B.xUpp = xUpp;
-
-A.vLow = vLow(1);
-B.vLow = vLow(2);
-A.vUpp = vUpp(1);
-B.vUpp = vUpp(2);
-
+% Get the polynomial coefficients for the leaf trajectories
 A.Coeff = getPolynomialCoeff(A);
 B.Coeff = getPolynomialCoeff(B);
 
-% Construct the cubic hermite trajectory for the dose rate:
-R.tLow = tLow;
-R.tUpp = tUpp;
-R.xLow = rBnd(1);
-R.xUpp = rBnd(2);
-R.vLow = drBnd(1);
-R.vUpp = drBnd(2);
-
 % Loop over and compute the fluence dose at each point:
+tLow = tBnd(1);
+tUpp = tBnd(2);
 nGrid = length(xGrid);
-g = zeros(1,nGrid);
+g = zeros(nGrid,1);
 for i = 1:nGrid
     % Find the time that the lower trajectory passes this point:
     C = A.Coeff; C(end) = C(end) - xGrid(i);
@@ -101,13 +81,16 @@ end
 
 function getFluenceProfile_test()
 
-tBnd = [0,1];
-xBnd = [0.1, 4.1];
-vLow = [0.02, 0.5];
-vUpp = [0.4, 0.03];
-rBnd = [2.6, 2.7];
-drBnd = [0.8, -0.9];
+tBnd = [0, 3];
+xBnd = [2, 6];
+vLow = sort(0.1 + rand(1,2), 2, 'ascend');
+vUpp = sort(0.1 + rand(1,2), 2, 'descend');
+rBnd = rand(1,2);
+drBnd = [rand(1), -rand(1)];
 
 [g, x, w] = getFluenceProfile(tBnd, xBnd, vLow, vUpp, rBnd, drBnd);
+
+figure(2); clf;
+plot(x,g);
 
 end

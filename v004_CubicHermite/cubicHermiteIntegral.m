@@ -30,6 +30,12 @@ wGrid = [0.347854845137454;
     0.652145154862546;
     0.347854845137454];
 
+if isempty(tLim)
+    J = 0;
+    warning('empty time limits!');
+    return
+end
+
 tGrid = tLim(1) + (tLim(2) - tLim(1))*0.5*(1+tGrid);  %map to [tLim(1), tLim(2)]
 wGrid = 0.5*wGrid*(tLim(2) - tLim(1)); %map to [tLim(1), tLim(2)]
 xVal = cubicHermiteInterpolate(tLow, tUpp, xLow, xUpp, vLow, vUpp, tGrid);
