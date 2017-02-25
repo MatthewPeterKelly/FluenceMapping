@@ -46,7 +46,8 @@ nGridPos = 80;  % Discretization for position-integral in objective
 nGridTime = 90;  % Discretization for time-integral in objective
 
 % Load the example:
-filename = 'example_one/twohumps.mat';
+% filename = 'example_one/twohumps.mat';
+filename = 'example_one/twodips.mat';
 [fx, xBnd] = loadProfile(filename);
 
 xLow = xBnd(1);
@@ -89,13 +90,13 @@ problem.guess.state = [x1Guess; x2Guess];
 problem.guess.control = zeros(3,2);
 
 %%%% OptimTraj options:
-nlpOpt = optimset('TolFun', 1e-4, 'MaxIter', 50, 'MaxFunEvals', 5000);
+nlpOpt = optimset('TolFun', 1e-4, 'MaxIter', 50, 'MaxFunEvals', 5000, 'Display','iter');
 problem.options(1).method = 'trapezoid';
 problem.options(1).trapezoid.nGrid = 5;
 problem.options(1).nlpOpt = nlpOpt;
-% problem.options(2).method = 'trapezoid';
-% problem.options(2).trapezoid.nGrid = 9;
-% problem.options(2).nlpOpt = nlpOpt;
+problem.options(2).method = 'trapezoid';
+problem.options(2).trapezoid.nGrid = 9;
+problem.options(2).nlpOpt = nlpOpt;
 
 
 %% %% Solve!
@@ -105,7 +106,7 @@ soln = optimTraj(problem);
 
 figure(1); clf;
 
-S = soln(end);
+S = soln(1);
 
 tGrid = S.grid.time;
 xGrid = S.grid.state;

@@ -1,5 +1,0 @@
-function Gx = computeFluence()
-
-
-
-end
