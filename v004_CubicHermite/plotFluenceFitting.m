@@ -5,7 +5,7 @@ figure(4); clf;
 t = linspace(A.tLow, A.tUpp, 100);
 ax = cubicHermiteInterpolate(A,t);
 bx = cubicHermiteInterpolate(B,t);
-rx = cubicHermiteInterpolate(R,t);
+rx = R(t);
 
 subplot(2,2,1); hold on
 plot(t,ax)

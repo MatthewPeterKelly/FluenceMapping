@@ -1,4 +1,4 @@
-function [g, xGrid, wGrid,A,B,R] = getFluenceProfile(tBnd, xBnd, vLow, vUpp, rBnd, drBnd)
+function [g, xGrid, wGrid,A,B,R] = getFluenceProfile(tBnd, xBnd, vLow, vUpp, rData)
 % [g, x, w] = getFluenceProfile(tBnd, xBnd, vLow, vUpp, rBnd, drBnd)
 %
 % This function computes the fluence profile Gx.
@@ -8,8 +8,7 @@ function [g, xGrid, wGrid,A,B,R] = getFluenceProfile(tBnd, xBnd, vLow, vUpp, rBn
 %   xBnd = [xLow, xUpp] = position bound for the problem
 %   vLow = [vLowA, vLowB] = initial velocity for both plates
 %   vUpp = [vUppA, vUppB] = final velocity for both plates
-%   rBnd = [rLow, rUpp] = dosage rate at lower and upper bound
-%   drBnd = [drLow, drUpp] = dosage accel at lower and upper bound
+%   rData = [row vector] = dosage rate a uniformly spaced times
 %
 % OUTPUTS:
 %   g = dose received at each point in x
@@ -50,7 +49,7 @@ xGrid = xLow + (xUpp - xLow)*xUnit;  %map to [xLow, xUpp]
 wGrid = 0.5*gaussWeightsUnit*(xUpp - xLow); %map to [xLow, xUpp]
 
 % Get the structs representing each time-series function
-[A,B,R] = unpackCubicFunctions(tBnd, xBnd, vLow, vUpp, rBnd, drBnd);
+[A,B,R] = unpackCubicFunctions(tBnd, xBnd, vLow, vUpp, rData);
 
 % Get the polynomial coefficients for the leaf trajectories
 A.Coeff = getPolynomialCoeff(A);
@@ -71,8 +70,9 @@ for i = 1:nGrid
     tRoot = roots(C); tRoot = tRoot + tLow;
     tRootUpp = tRoot(tRoot>tLow & tRoot < tUpp);
     % Compute the intergral of the dose rate over this spot:
-    tLim = [tRootUpp, tRootLow];
-    g(i) = cubicHermiteIntegral(R, tLim);
+    tInt = linspace(tRootUpp, tRootLow, 10);
+    rInt = R(tInt);
+    g(i) = trapz(tInt, rInt);
 end
 
 end
@@ -85,10 +85,9 @@ tBnd = [0, 3];
 xBnd = [2, 6];
 vLow = sort(0.1 + rand(1,2), 2, 'ascend');
 vUpp = sort(0.1 + rand(1,2), 2, 'descend');
-rBnd = rand(1,2);
-drBnd = [rand(1), -rand(1)];
+rData = sin(0:8);
 
-[g, x, w] = getFluenceProfile(tBnd, xBnd, vLow, vUpp, rBnd, drBnd);
+[g, x, w] = getFluenceProfile(tBnd, xBnd, vLow, vUpp, rData);
 
 figure(2); clf;
 plot(x,g);

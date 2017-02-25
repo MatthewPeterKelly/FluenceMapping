@@ -15,15 +15,34 @@ clc; clear;
 filename = 'example_one/twodips.mat';
 [fx, xBnd] = loadProfile(filename);
 
-tBnd = [0,10];   % A rough guess for now. We can iterate over this.
+vMax = 3;
+rMax = 10;
+
+nGridDoseRate = 5;
+
+tBnd = 3*[0,diff(xBnd)/vMax];   % A rough guess for now. We can iterate over this.
 
 vNom = diff(xBnd)/diff(tBnd);
-vLowGuess = vNom*[0.1, 0.8];
-vUppGuess = vNom*[0.8, 0.1];
-rBndGuess = 5*[1,1];  % dose rate
-drBndGuess = [4,-1];  % dose accel
+vLow = [0,vMax];
+vUpp = [vMax,0];
+rDataGuess = 0.5*rMax*ones(nGridDoseRate,1);
 
-[fitErr, x,f,g,A,B,R] = getFittingErr(tBnd, xBnd, vLowGuess, vUppGuess, rBndGuess, drBndGuess, fx);
+% Solve for data:
+problem.objective =  @(rData)( getFittingErr(tBnd, xBnd, vLow, vUpp, rData, fx) );
+problem.x0 = rDataGuess;
+problem.Aineq = [];
+problem.bineq = [];
+problem.Aeq = [];
+problem.beq = [];
+problem.lb = zeros(nGridDoseRate,1);
+problem.ub = rMax*ones(nGridDoseRate,1);
+problem.nonlcon = [];
+problem.options = optimset('fmincon');
+problem.solver = 'fmincon';
+
+rDataSoln = fmincon(problem);
+
+[fitErr, x,f,g,A,B,R] = getFittingErr(tBnd, xBnd, vLow, vUpp, rDataSoln, fx);
 
 plotFluenceFitting(fitErr,x,f,g,A,B,R);
 

@@ -1,5 +1,5 @@
-function [A,B,R] = unpackCubicFunctions(tBnd, xBnd, vLow, vUpp, rBnd, drBnd)
-% [A,B,R] = unpackCubicFunctions(tBnd, xBnd, vLow, vUpp, rBnd, drBnd)
+function [A,B,R] = unpackCubicFunctions(tBnd, xBnd, vLow, vUpp, rData)
+% [A,B,R] = unpackCubicFunctions(tBnd, xBnd, vLow, vUpp, rData)
 %
 % Utility function to get lower and upper leaf trajectories and does rate
 % trajectory.
@@ -40,12 +40,10 @@ B.vLow = vLow(2);
 A.vUpp = vUpp(1);
 B.vUpp = vUpp(2);
 
-% Construct the cubic hermite trajectory for the dose rate:
-R.tLow = tLow;
-R.tUpp = tUpp;
-R.xLow = rBnd(1);
-R.xUpp = rBnd(2);
-R.vLow = drBnd(1);
-R.vUpp = drBnd(2);
+% Construct the spline for the dose rate:
+nGrid = length(rData);
+tData = linspace(tLow, tUpp, nGrid);
+pp = pchip(tData, rData);
+R = @(t)( ppval(pp,t) );
 
 end
