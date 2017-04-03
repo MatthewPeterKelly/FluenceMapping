@@ -1,5 +1,5 @@
-function [doseFun, objVal, exitFlag] = optimizeDoseTrajectories(tGrid, xGrid, fluenceFun)
-% [doseFun, objVal, exitFlag] = optimizeDoseTrajectories(tGrid, xGrid, fluenceFun)
+function [doseFun, xLowGrid, xUppGrid,objVal, exitFlag] = optimizeDoseTrajectories(tGrid, xGrid, tDose, fluenceFun)
+% [doseFun, xLowGrid, xUppGrid,objVal, exitFlag] = optimizeDoseTrajectories(tGrid, xGrid, tDose, fluenceFun)
 %
 % Given the time and position grids, compute the dose function that
 % delivers the best fluence profile. Outer optimization loop.
@@ -21,7 +21,6 @@ if nargin == 0
 end
 
 % Construct an initial guess
-tDose = linspace(tGrid(1), tGrid(end), 5)';
 guess = 0.6*ones(size(tDose))';
 sigma = 0.4;
 
@@ -30,20 +29,21 @@ objFun = 'doseRateObjFun';
 
 % CMAES options:
 options = cmaes('defaults');
-options.MaxIter = 40;
+options.MaxIter = 1;
 options.TolX = 0.1;
 options.LBounds = zeros(size(tDose));
 options.UBounds = ones(size(tDose));
 options.DispModulo = 1;
 options.LogModulo = 0;
+options.PopSize = 8;
 
 % Call CMAES:
 [~, objVal, ~, exitFlag, zBest] = cmaes(objFun, guess, sigma, options,...
                                             tDose, tGrid, xGrid, fluenceFun);
 
 % Compute the dose trajectory
-ppDose = pchip(tDose, zBest);
-doseFun = @(t)( ppval(ppDose, t) );
+bestdose = zBest.solutions.bestever.x;
+[~, doseFun, xLowGrid, xUppGrid] = doseRateObjFun(bestdose, tDose, tGrid, xGrid, fluenceFun);
 
 end
 
@@ -65,12 +65,13 @@ ppFluence = spline(xFluence, gFluence);
 fluenceFun = @(x)( ppval(ppFluence, x) );
 
 % Compute the optimal dose trajectories:
-doseFun = optimizeDoseTrajectories(tGrid, xGrid, fluenceFun);
+tDose = linspace(tGrid(1), tGrid(end), 5)';
+[doseFun, xLowGrid, xUppGrid] = optimizeDoseTrajectories(tGrid, xGrid, tDose, fluenceFun);
 
 % Compute the fluence for the solution:
 fGrid = getFluenceProfile(xGrid, tGrid, xLowGrid, xUppGrid, doseFun);
 
 figure(3); clf;
-plotFluenceFitting(tGrid,xLowGrid,xUppGrid,tGrid,doseFun,xGrid,fGrid, fluenceFun);
+plotFluenceFitting(tGrid,xLowGrid,xUppGrid,tDose,doseFun,xGrid,fGrid, fluenceFun);
 
 end

@@ -1,5 +1,5 @@
-function [xLowGrid, xUppGrid, objVal, exitFlag] = optimizeLeafTrajectories(tGrid, xGrid, doseFun, fluenceFun)
-% [xLowGrid, xUppGrid, objVal, exitFlag] = optimizeLeafTrajectories(tGrid, xGrid, doseFun, fluenceFun)
+function [xLowGrid, xUppGrid, objVal, exitFlag] = optimizeLeafTrajectories(tGrid, xGrid, doseFun, fluenceFun, options)
+% [xLowGrid, xUppGrid, objVal, exitFlag] = optimizeLeafTrajectories(tGrid, xGrid, doseFun, fluenceFun, options)
 %
 % Given the dose profile and desired fluence profile, compute the best
 % possible choice for the lower and upper leaf trajectories
@@ -32,11 +32,6 @@ xLeafGuess = [xLowGuess, xUppGuess];
 userFun = @(z)( objFun(z, xGrid, tGrid, doseFun, fluenceFun) );
 
 % Minimize!
-options = optimset(...
-    'Display','final',...
-    'MaxIter',1000,...
-    'TolFun',1e-2,...
-    'TolX',1e-2);
 [zSoln, objVal, exitFlag] = fminsearch(userFun, xLeafGuess, options);
 
 % Extract the solution:
@@ -85,9 +80,16 @@ gFluence = [0.4, 0.6, 0.8, 1.2, 0.6];
 ppFluence = spline(xFluence, gFluence);
 fluenceFun = @(x)( ppval(ppFluence, x) );
 
+% Optimization options
+options = optimset(...
+    'Display','iter',...
+    'MaxIter',1000,...
+    'TolFun',1e-2,...
+    'TolX',1e-2);
+
 % Compute the optimal leaf trajectories:
 tic
-[xLowGrid, xUppGrid] = optimizeLeafTrajectories(tGrid, xGrid, doseFun, fluenceFun);
+[xLowGrid, xUppGrid] = optimizeLeafTrajectories(tGrid, xGrid, doseFun, fluenceFun, options);
 toc
 
 % Compute the fluence for the solution:
