@@ -35,6 +35,9 @@ if nargin > 7
 end
 plot(f,x,'k-')
 plot(fGrid,xGrid,'ko');
+if nargin > 7
+    legend('Fluence Target','Fluence Delivered');
+end
 xlabel('fluence')
 ylabel('position')
 

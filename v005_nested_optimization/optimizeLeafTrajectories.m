@@ -1,5 +1,5 @@
-function [xLowGrid, xUppGrid] = optimizeLeafTrajectories(tGrid, xGrid, doseFun, fluenceFun)
-% [xLowGrid, xUppGrid] = optimizeLeafTrajectories(tGrid, xGrid, doseFun, fluenceFun)
+function [xLowGrid, xUppGrid, objVal, exitFlag] = optimizeLeafTrajectories(tGrid, xGrid, doseFun, fluenceFun)
+% [xLowGrid, xUppGrid, objVal, exitFlag] = optimizeLeafTrajectories(tGrid, xGrid, doseFun, fluenceFun)
 %
 % Given the dose profile and desired fluence profile, compute the best
 % possible choice for the lower and upper leaf trajectories
@@ -20,21 +20,54 @@ if nargin == 0
     return;
 end
 
-% fGrid = getFluenceProfile(xGrid, tGrid, xLowGrid, xUppGrid, rFun)
+% Construct an initial guess
+xLow = xGrid(1);
+xUpp = xGrid(end);
+xMid = 0.5*(xLow + xUpp);
+xLowGuess = 0.5*(xLow+xMid)*ones(size(tGrid));
+xUppGuess = 0.5*(xUpp+xMid)*ones(size(tGrid));
+xLeafGuess = [xLowGuess, xUppGuess];
 
-xLowGrid = xGrid(1) + (xGrid(end) - xGrid(1))*(1-0.5*cos(tGrid));
+% User-defined objective function:
+userFun = @(z)( objFun(z, xGrid, tGrid, doseFun, fluenceFun) );
 
-xUppGrid = xGrid(1) + (xGrid(end) - xGrid(1))*(1-0.5*sin(tGrid));
+% Minimize!
+options = optimset(...
+    'Display','iter',...
+    'MaxIter',1000,...
+    'TolFun',1e-2,...
+    'TolX',1e-2);
+[zSoln, objVal, exitFlag] = fminsearch(userFun, xLeafGuess, options);
+
+% Extract the solution:
+nTime = length(tGrid);
+xLowGrid = zSoln(1:nTime);
+xUppGrid = zSoln((nTime+1):end);
 
 end
 
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+
+function fitErr = objFun(leafGrid, xGrid, tGrid, doseFun, fluenceFun)
+
+nTime = length(tGrid);
+
+xLowGrid = leafGrid(1:nTime);
+xUppGrid = leafGrid((nTime+1):end);
+
+fGridTarget = fluenceFun(xGrid);
+fGrid = getFluenceProfile(xGrid, tGrid, xLowGrid, xUppGrid, doseFun);
+
+fitErr = sum((fGrid - fGridTarget).^2);
+
+end
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 
 function optimizeLeafTrajectories_test()
 
 nGridT = 4;  % grid on which to evaluate the dose rate
-nGridX = 20;  % grid on which to evaluate the fluence
+nGridX = 9;  % grid on which to evaluate the fluence
 tBnd = [0,2];
 tGrid = linspace(tBnd(1),tBnd(2),nGridT);
 xBnd = [2, 6];
