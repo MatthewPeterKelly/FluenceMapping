@@ -1,17 +1,15 @@
-function [xGrid, fGrid] = getFluenceProfile(xBnd, tGrid, xLowGrid, xUppGrid, rFun)
-% [xGrid, fGrid] = getFluenceProfile(xBnd, tGrid, xLowGrid, xUppGrid, rFun)
+function fGrid = getFluenceProfile(xGrid, tGrid, xLowGrid, xUppGrid, rFun)
+% fGrid = getFluenceProfile(xGrid, tGrid, xLowGrid, xUppGrid, rFun)
 %
 % This function computes the fluence profile Gx.
 %
 % INPUTS:
-%   xBnd = boundaries on the leaf position
+%   xGrid = position grid on which to evaluate fluence
 %   tGrid = time grid for leaf trajectories
-%   xLowGrid = lower leaf position at knots
-%   xUppGrid = upper leaf position at knots
+%   xLowGrid = lower leaf position at knots in tGrid
+%   xUppGrid = upper leaf position at knots in tGrid
 %   rFun = dose rate as a function of time
-%
 % OUTPUTS:
-%   xGrid = position grid for fluence profile
 %   fGrid = fluence at each point in xGrid
 %
 
@@ -20,10 +18,8 @@ if nargin == 0
     return;
 end
 
-nx = 20;
-xGrid = linspace(xBnd(1), xBnd(2), nx);
-fGrid = zeros(1,nx);
-
+nx = length(xGrid);
+fGrid = zeros(size(xGrid));
 for ix=1:nx
     xTest = xGrid(ix);
     
@@ -72,6 +68,7 @@ xLowGrid = min(xLowGridTmp, xUppGridTmp);
 xUppGrid = max(xLowGridTmp, xUppGridTmp);
 xBnd(1) = min(xLowGrid) - 0.01;
 xBnd(2) = max(xUppGrid) + 0.01;
+xGrid = linspace(xBnd(1), xBnd(2), 20);
 
 nr = 6;
 rGrid = rand(1,nr);
@@ -79,7 +76,9 @@ trGrid = linspace(tBnd(1),tBnd(2),nr);
 ppr = pchip(trGrid, rGrid);
 rFun = @(t)( ppval(ppr,t) );
 
-[xGrid, fGrid] = getFluenceProfile(xBnd, tGrid, xLowGrid, xUppGrid, rFun);
+tic
+fGrid = getFluenceProfile(xGrid, tGrid, xLowGrid, xUppGrid, rFun);
+toc
 
 figure(2); clf;
 plotFluenceFitting(tGrid,xLowGrid,xUppGrid,trGrid,rFun,xGrid,fGrid);

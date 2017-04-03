@@ -1,4 +1,4 @@
-function plotFluenceFitting(tGrid,xLowGrid,xUppGrid,trGrid,rFun,xGrid,fGrid)
+function plotFluenceFitting(tGrid,xLowGrid,xUppGrid,trGrid,rFun,xGrid,fGrid,fluenceFun)
 
 ppxLow = pchip(tGrid,xLowGrid);
 ppxUpp = pchip(tGrid,xUppGrid);
@@ -28,8 +28,13 @@ xlabel('time')
 ylabel('fluence dose')
 
 subplot(2,2,1); hold on;
+if nargin > 7
+    xTarget = linspace(xGrid(1), xGrid(end), 100);
+   fTarget = fluenceFun(xTarget);
+   plot(fTarget,xTarget,'b-');
+end
 plot(f,x,'k-')
-plot(fGrid,xGrid,'ko')
+plot(fGrid,xGrid,'ko');
 xlabel('fluence')
 ylabel('position')
 
