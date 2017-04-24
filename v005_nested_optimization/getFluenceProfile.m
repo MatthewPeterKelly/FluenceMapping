@@ -25,7 +25,7 @@ for ix=1:nx
     
     % Compute the roots of each function
     [tRootLow, ~, ppLow] = getPchipRoots(tGrid, xTest - xLowGrid);
-    [tRootUpp, ~, ppUpp] = getPchipRoots(tGrid, xUppGrid -xTest);
+    [tRootUpp, ~, ppUpp] = getPchipRoots(tGrid, xUppGrid - xTest);
     
     % Merge roots:
     tRoot = sort(unique([tGrid(1), tGrid(end), tRootLow, tRootUpp]));

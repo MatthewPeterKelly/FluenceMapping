@@ -82,7 +82,7 @@ fLow = feval(func,xLow);
 fUpp = feval(func,xUpp);
 xZero = [];
 
-tol = 10*eps;
+tol = 1e-8;
 
 if (fLow > 0.0 && fUpp < 0.0) || (fLow < 0.0 && fUpp > 0.0)
     for i=1:maxIter
@@ -118,9 +118,9 @@ if (fLow > 0.0 && fUpp < 0.0) || (fLow < 0.0 && fUpp > 0.0)
         
     end
 else
-    if fLow == 0.0
+    if abs(fLow) < tol
         xZero = xLow;
-    elseif fUpp == 0.0
+    elseif abs(fUpp) < tol
         xZero = xUpp;
     else
         error('Root must be bracketed in Ridder''s Method!');

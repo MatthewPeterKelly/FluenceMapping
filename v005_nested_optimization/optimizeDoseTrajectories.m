@@ -1,5 +1,5 @@
-function [doseFun, xLowGrid, xUppGrid,objVal, exitFlag] = optimizeDoseTrajectories(tGrid, xGrid, tDose, fluenceFun)
-% [doseFun, xLowGrid, xUppGrid,objVal, exitFlag] = optimizeDoseTrajectories(tGrid, xGrid, tDose, fluenceFun)
+function [doseFun, xLowGrid, xUppGrid,objVal, exitFlag] = optimizeDoseTrajectories(tGrid, xGrid, tDose, fluenceFun, maxDose, options)
+% [doseFun, xLowGrid, xUppGrid,objVal, exitFlag] = optimizeDoseTrajectories(tGrid, xGrid, tDose, fluenceFun, maxDose, options)
 %
 % Given the time and position grids, compute the dose function that
 % delivers the best fluence profile. Outer optimization loop.
@@ -21,25 +21,27 @@ if nargin == 0
 end
 
 % Construct an initial guess
-guess = 0.6*ones(size(tDose))';
-sigma = 0.4;
+guess = 0.6*maxDose*ones(size(tDose))';
+sigma = 0.4*maxDose;
 
 % User-defined objective function
 objFun = 'doseRateObjFun';
 
 % CMAES options:
-options = cmaes('defaults');
-options.MaxIter = 1;
-options.TolX = 0.1;
-options.LBounds = zeros(size(tDose));
-options.UBounds = ones(size(tDose));
-options.DispModulo = 1;
-options.LogModulo = 0;
-options.PopSize = 8;
+if nargin < 6
+    options = cmaes('defaults');
+    options.MaxIter = 5;
+    options.TolX = 0.1;
+    options.LBounds = zeros(size(tDose));
+    options.UBounds = maxDose*ones(size(tDose));
+    options.DispModulo = 1;
+    options.LogModulo = 0;
+    options.PopSize = 8;
+end
 
 % Call CMAES:
 [~, objVal, ~, exitFlag, zBest] = cmaes(objFun, guess, sigma, options,...
-                                            tDose, tGrid, xGrid, fluenceFun);
+    tDose, tGrid, xGrid, fluenceFun);
 
 % Compute the dose trajectory
 bestdose = zBest.solutions.bestever.x;
@@ -57,6 +59,7 @@ tBnd = [0,2];
 tGrid = linspace(tBnd(1),tBnd(2),nGridT)';
 xBnd = [2, 6];
 xGrid = linspace(xBnd(1), xBnd(2), nGridX)';
+maxDose = 1;
 
 % Compute the sample fluence profile:
 xFluence = linspace(xBnd(1), xBnd(2), 5);
@@ -66,7 +69,7 @@ fluenceFun = @(x)( ppval(ppFluence, x) );
 
 % Compute the optimal dose trajectories:
 tDose = linspace(tGrid(1), tGrid(end), 5)';
-[doseFun, xLowGrid, xUppGrid] = optimizeDoseTrajectories(tGrid, xGrid, tDose, fluenceFun);
+[doseFun, xLowGrid, xUppGrid] = optimizeDoseTrajectories(tGrid, xGrid, tDose, fluenceFun, maxDose);
 
 % Compute the fluence for the solution:
 fGrid = getFluenceProfile(xGrid, tGrid, xLowGrid, xUppGrid, doseFun);
