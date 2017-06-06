@@ -43,11 +43,10 @@ tCritUpp = t([false, critSeg]);
 % Compute root for each critical segment:
 nRoot = sum(critSeg);
 tRoot = zeros(1,nRoot);
-userFun = @(t)( ppval(ppx,t) );
 for i=1:nRoot
    tLow = tCritLow(i);
    tUpp = tCritUpp(i);
-   tRoot(i) = rootSolve(userFun, tLow, tUpp);
+   tRoot(i) = rootSolve(ppx, tLow, tUpp);
 end
 
 vRoot = ppval(ppv, tRoot);
@@ -56,14 +55,14 @@ end
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 
-function xZero = rootSolve(func,xLow,xUpp)
-% XZERO = ROOTSOLVE(FUNC, XLOW, XUPP)
+function xZero = rootSolve(ppx,xLow,xUpp)
+% XZERO = ROOTSOLVE(ppx, XLOW, XUPP)
 %
 % FUNCTION: This function uses Ridder's Method to return a root, xZero,
 %     of func on the interval [xLow,xUpp]
 %
 % INPUTS:
-%   func = a function for a SISO function: y = f(x)
+%   ppx = a matlab pp spline for the x position
 %   xLow = the lower search bound
 %   xUpp = the upper search bound
 %
@@ -78,8 +77,8 @@ function xZero = rootSolve(func,xLow,xUpp)
 %   that it finds.
 
 maxIter = 50;
-fLow = feval(func,xLow);
-fUpp = feval(func,xUpp);
+fLow = ppval(ppx,xLow);
+fUpp = ppval(ppx,xUpp);
 xZero = [];
 
 tol = 1e-8;
@@ -87,7 +86,7 @@ tol = 1e-8;
 if (fLow > 0.0 && fUpp < 0.0) || (fLow < 0.0 && fUpp > 0.0)
     for i=1:maxIter
         xMid = 0.5*(xLow+xUpp);
-        fMid = feval(func,xMid);
+        fMid = ppval(ppx,xMid);
         s = sqrt(fMid*fMid - fLow*fUpp);
         if s==0.0, break; end
         xTmp = (xMid-xLow)*fMid/s;
@@ -97,7 +96,7 @@ if (fLow > 0.0 && fUpp < 0.0) || (fLow < 0.0 && fUpp > 0.0)
             xNew = xMid - xTmp;
         end
         xZero = xNew;
-        fNew = feval(func,xZero);
+        fNew = ppval(ppx,xZero);
         if abs(fNew)<tol, break; end
         
         %Update
