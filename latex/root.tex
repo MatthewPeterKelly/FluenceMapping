@@ -1,4 +1,5 @@
 \documentclass[12pt]{article}
+\usepackage{mathtools,bm}
 \usepackage{amsmath,amsfonts,amssymb}   %% AMS mathematics macros
 \usepackage{graphicx}
 \usepackage{fancyvrb}
@@ -17,7 +18,9 @@
  \renewcommand{\floatpagefraction}{.8}
  \renewcommand\Affilfont{\fontsize{9}{10.8}\itshape}
 
+\definecolor{lightblue}{rgb}{0.0,0.5,0.8}
 \newcommand{\todo}[1]{\comment{{\color{lightblue}\par {[{\bf TO DO: } {\em #1}} ] \\    }}}
+\newcommand{\addref}[1]{\comment{{\color{red}{\bf [REF #1]}}}}
 
  \title{Dynamic leaf sequencing via polynomial representations of leaf trajectories and dose rate}
 
@@ -75,7 +78,8 @@ Let $x_L(t)$ be position of the left leaf at time $t$. We have
 \noindent (ditto for right leaf). Let $T_L(x)$ be the inverse of this function
 (if we assume/enforce that velocity is always $>0$ then this inverse exists). Thus
 $T_L(x)$ is the time that the left leaf crosses the position $x$. The fluence delivered to position
-$x$, which we call $g(x)$ is the integration of the dose rate over the interval for which the position $x$ is not covered by either leaves, see Figure \ref{sketch}.
+$x$, which we call $g(x)$ is the integration of the dose rate over the interval for which the position $x$ is not covered by either leaves,
+see Figure \todo{sketch}.
 
 %\begin{figure}[!htbp]
 %\centering
@@ -94,7 +98,6 @@ The optimization problem is to find the velocities and the dose rate over time t
 
 \begin{equation}
 \mathrm{min} \int_{x=-1}^1 \left ( g(x) - f(x) \right )^2 dx
-\label{opt}
 \end{equation}
 
 ENTER THE CHEBYSHEVS: We represent the velocities $v$ as weighted sums of Chebyshev polynomials of the first kind.

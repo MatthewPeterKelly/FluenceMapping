@@ -1,6 +1,43 @@
 \section{Method}
 
-\todo{Matt:  Finish this section}
+\subsection{Trajectory Representation}
+
+The general algorithm presented in this paper is agnostic to the choice of trajectory represention.
+There is a large literature in trajectory optimization studying trajectory representation. \addref{trajectory representation}
+Here we choose to use shape-preserving cubic splines: the \texttt{PCHIP} spline type in Matlab.
+This choice of trajectory has a few useful properties: it is continuous in leaf position and velocity
+and it makes it simple to represent the trajectory using only the position at a few knot points.
+A piecewise linear spline would also be a reasonable choice.
+
+\todo{why cubic $>$ linear?  Would linear be faster?}
+
+\subsection{Nested Optimization}
+
+This optimization problem has a natural structure. Rather than solve both the dose rate and leaf trajectories simultaneously,
+we instead optimize the dose rate as an outer optimization, and the leaf trajectories as an inner optimization.
+Although we only solve a single leaf trajectory in this paper, this decoupling allows these methods to easily extend to situations with multiple leaves.
+
+\todo{Decoupled optimization equations}
+
+\subsection{Computing Delivered Fluence}
+
+One of the core numerical methods in this paper is the technique for computing an estimate of the fluence
+that will be delivered (\ref{eqn:deliveredFluenceDose}), given a dose rate and leaf trajectories.
+
+The first step is to compute the time spans where the radiation is able to pass between the leaves: $T(x)$.
+\todo{explain the algorithm for this}.
+Once this is done, then we can replace the original integral (composite domain) with a set of definite integrals,
+each of which has a simple domain:
+
+\begin{equation}
+q'(x) = \int_{T(x)} r(t) dt = \int_{t_0}^ {t_1} + \dots + \int_{t_{N-1}}^ {t_N}
+\label{eqn:deliveredFluenceDoseSum}
+\end{equation}
+
+Each of these integrals can then be computed using standard quadrature techniques.
+Here we choose to use Simpson quardature.
+
+\subsection{template:}
 
 We consider a single row version of the problem. Extension to the full fluence map should be possible, but it makes sense
 to first develop the method and see how it works for a single row. Let $f(x)$ be the desired fluence map to deliver, where
@@ -18,7 +55,8 @@ Let $x_L(t)$ be position of the left leaf at time $t$. We have
 \noindent (ditto for right leaf). Let $T_L(x)$ be the inverse of this function
 (if we assume/enforce that velocity is always $>0$ then this inverse exists). Thus
 $T_L(x)$ is the time that the left leaf crosses the position $x$. The fluence delivered to position
-$x$, which we call $g(x)$ is the integration of the dose rate over the interval for which the position $x$ is not covered by either leaves, see Figure \ref{sketch}.
+$x$, which we call $g(x)$ is the integration of the dose rate over the interval for which the position $x$ is not covered by either leaves, see Figure
+\todo{Include figure}
 
 \begin{equation}
   g(x) = \int_{t = T_R(x)}^{T_L(x)} d(t) dt

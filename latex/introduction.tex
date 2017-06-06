@@ -15,8 +15,21 @@ Our goal is to compute the optimal leaf trajectories $x_L(t)$ and $x_U(t)$, as w
 For this initial study we will consider only a single row of leaves,
 although our algorithm is structured such that it could be applied to an arbitrary number of leaf rows.
 We will assume that the desired fluence dose at each point $q(x)$ on the subject is given.
-The optimization problem can thus be stated:
+The optimization is given below, where $q'(x)$ is the fluence dose that is delievered by the
+dose rate and leaf trajectories and $X$ is the position domain of the fluence map.
 
 \begin{equation}
-x(t)
+\underset{r(t), \, x_L(t), \, x_U(t)}{\operatorname{argmin}}
+\int_X \bigg(q'(x)) - q(x)\bigg)^2 dx
+\label{eqn:fluenceMapOptimization}
 \end{equation}
+
+The fluence dose at each location can be computed as
+
+\begin{equation}
+q'(x) = \int_{T(x)} r(t) dt
+\label{eqn:deliveredFluenceDose}
+\end{equation}
+
+where $T(x)$ is the set of times when the position $x$ is not blocked by the leaves:
+$T(x)$ is the set of all times $t$ such that $ x_L(t) < x < x_U(t)$.
