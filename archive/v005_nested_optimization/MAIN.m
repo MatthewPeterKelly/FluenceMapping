@@ -35,7 +35,7 @@ xFluence = linspace(xBnd(1), xBnd(2), 5);
 % Compute the fluence for the solution:
 fGrid = getFluenceProfile(xGrid, tGrid, xLowGrid, xUppGrid, doseFun);
 
-figure(3); clf;
+figure(5); clf;
 plotFluenceFitting(tGrid,xLowGrid,xUppGrid,tDose,doseFun,xGrid,fGrid, fluenceFun);
 
 

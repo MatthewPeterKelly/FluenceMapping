@@ -1,3 +1,5 @@
 # Matlab autosave:
 **.*m~
 
+# CMAES stuff:
+**variablescmaes.mat
