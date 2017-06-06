@@ -1,0 +1,41 @@
+\section{Method}
+
+\todo{Matt:  Finish this section}
+
+We consider a single row version of the problem. Extension to the full fluence map should be possible, but it makes sense
+to first develop the method and see how it works for a single row. Let $f(x)$ be the desired fluence map to deliver, where
+$x$ is the position across the fluence row, $x \in [-1,1]$. We choose this as the domain because that is the
+domain that the Chebyshev polynomials are written for. Across that domain the Chebyshev polynomials range from $-1$ to $1$.
+We assume we have $T=1$ time unit to reproduce the fluence map $f$ by sliding leaves across the field from left to right.
+Let $v_L(t)$ be the velocity of the left leaf at time $t$ and $v_R(t)$ the right leaf velocity. We assume we fix the starting positions
+of both leaves. We may end up assuming we fix the ending positions too. This is not ideal, in fact we would like to optimize over
+starting and ending leaf positions as well, but to make things more concrete, for now starting positions are assumed fixed and given.
+
+Let $x_L(t)$ be position of the left leaf at time $t$. We have
+\begin{equation}
+  x_L(t) = x_L(0) + \int_{\tau=0}^t v_L(\tau) d\tau.
+\end{equation}
+\noindent (ditto for right leaf). Let $T_L(x)$ be the inverse of this function
+(if we assume/enforce that velocity is always $>0$ then this inverse exists). Thus
+$T_L(x)$ is the time that the left leaf crosses the position $x$. The fluence delivered to position
+$x$, which we call $g(x)$ is the integration of the dose rate over the interval for which the position $x$ is not covered by either leaves, see Figure \ref{sketch}.
+
+\begin{equation}
+  g(x) = \int_{t = T_R(x)}^{T_L(x)} d(t) dt
+\end{equation}
+\noindent where d(t) is the dose rate at time $t$.
+
+The optimization problem is to find the velocities and the dose rate over time to get $g$ as close to $f$ as possible:
+
+\begin{equation}
+\mathrm{min} \int_{x=-1}^1 \left ( g(x) - f(x) \right )^2 dx
+\label{opt}
+\end{equation}
+
+
+So, for example, the left leaf velocity is given by
+$$
+v_L(t) = \sum_{i=0}^3 c^L_i T_i(t).
+$$
+\noindent and we can do the same for the right leaf velocity and the dose rate as a function of time.
+The optimization problem them becomes a search for the coefficients $c^L_i$, $c^R_i$, and $c^d_i$ that minimize the objective in Equation \ref{opt}.

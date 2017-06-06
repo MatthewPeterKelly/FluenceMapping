@@ -16,7 +16,9 @@
  }
  \renewcommand{\floatpagefraction}{.8}
  \renewcommand\Affilfont{\fontsize{9}{10.8}\itshape}
- 
+
+\newcommand{\todo}[1]{\comment{{\color{lightblue}\par {[{\bf TO DO: } {\em #1}} ] \\    }}}
+
  \title{Dynamic leaf sequencing via polynomial representations of leaf trajectories and dose rate}
 
  \author{Matthew Kelly, Koos van Amerongen, David Craft}
@@ -30,7 +32,7 @@
 
 %\begin{figure}[!htbp]
 %\centering
-%%trim option's parameter order: left bottom right top  
+%%trim option's parameter order: left bottom right top
 %\includegraphics[trim=0 50 0 0,clip,width=17cm]{clonalTree}
 %\caption{Clonal expansion of a cancer cell population. The population starts exponentially dividing with fitness $f_0$ at time 0.}
 %\label{clonalTree}
@@ -39,25 +41,21 @@
 
 \begin{abstract}
   We consider the problem of matching a given fluence map $f$ to a close approximation in limited time $T$ by the use
-  of a multi-leaf collimator, i.e. the setting of IMRT and VMAT in radiation therapy. We use low order polynomial 
+  of a multi-leaf collimator, i.e. the setting of IMRT and VMAT in radiation therapy. We use low order polynomial
   representations for leaf velocities and the dose rate as functions of time. The optimization then searches over the coefficients
   that define those polynomials, resulting in an optimization problem in a smaller dimension and one that is inherently smoother,
   thus focusing on global aspects of the solution and avoiding the noisy local minima that occur when solving the problem in the original
   space of leaf positions and dose rates vs time.
 \end{abstract}
 
-\section{Introduction}
-The optimal dynamic delivery of a given fluence map remains a difficult, largely unsolved problem, due to its inherent nonconvexity.
-The nonconvexity of the fluence map matching problem leads to a large number of local minima. Many methods simply ignore this crucial aspect
-of the problem, and others use a multi-start procedure to find several local minima and return the best one found. For a thorough introduction
-to the complexities of dynamic fluence map delivery (which generally arises in the context of volumetric modulated arc therapy, VMAT),
-see \cite{balvertcraft} and \cite{unkvmatreview}.
 
-In this technical note, we investigate a regularization procedure which represents leaf trajectories and dose rates as low-order polynomials,
-such that the optimization procedure naturally focuses on global aspects of the leaf trajectory/dose rate solution.
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+\input{introduction}
 
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+\input{method}
 
-\section{Methods}
+\section{Methods - template}
 
 [MATT this is copy and pasted from the original ``chebyopt.pdf'' that I sent you. Probably all will need to be revised, but leaving it in case some is salvagable/usable.]
 
@@ -72,7 +70,7 @@ starting and ending leaf positions as well, but to make things more concrete, fo
 
 Let $x_L(t)$ be position of the left leaf at time $t$. We have
 \begin{equation}
-  x_L(t) = x_L(0) + \int_{\tau=0}^t v_L(\tau) d\tau. 
+  x_L(t) = x_L(0) + \int_{\tau=0}^t v_L(\tau) d\tau.
 \end{equation}
 \noindent (ditto for right leaf). Let $T_L(x)$ be the inverse of this function
 (if we assume/enforce that velocity is always $>0$ then this inverse exists). Thus
@@ -133,5 +131,3 @@ TODO:  results
 \bibliography{all}
 
 \end{document}
-
-
