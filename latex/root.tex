@@ -8,6 +8,7 @@
 \usepackage{hyperref}
 \usepackage{authblk}
 \usepackage{geometry}
+
 \linespread{1.4}
  \geometry{
  a4paper,
@@ -19,8 +20,12 @@
  \renewcommand\Affilfont{\fontsize{9}{10.8}\itshape}
 
 \definecolor{lightblue}{rgb}{0.0,0.5,0.8}
-\newcommand{\todo}[1]{\comment{{\color{lightblue}\par {[{\bf TO DO: } {\em #1}} ] \\    }}}
-\newcommand{\addref}[1]{\comment{{\color{red}{\bf [REF #1]}}}}
+\newcommand{\todo}[1]{{\color{lightblue}\par {[{\bf TO DO: } {\em #1}} ] \\    }}
+\newcommand{\addref}[1]{{\color{red}{\bf [REF #1]}}}
+\newcommand{\MPKcomment}[1]{{\color{magenta}\par {[{\bf MPK: } { #1}} ] \\    }}
+\newcommand{\DCcomment}[1]{{\color{magenta}\par {[{\bf DC: } { #1}} ] \\    }}
+\newcommand{\KvAcomment}[1]{{\color{magenta}\par {[{\bf KvA: } { #1}} ] \\    }}
+
 
  \title{Dynamic leaf sequencing via polynomial representations of leaf trajectories and dose rate}
 
@@ -43,12 +48,12 @@
 
 
 \begin{abstract}
-  We consider the problem of matching a given fluence map $f$ to a close approximation in limited time $T$ by the use
-  of a multi-leaf collimator, i.e. the setting of IMRT and VMAT in radiation therapy. We use low order polynomial
-  representations for leaf velocities and the dose rate as functions of time. The optimization then searches over the coefficients
-  that define those polynomials, resulting in an optimization problem in a smaller dimension and one that is inherently smoother,
-  thus focusing on global aspects of the solution and avoiding the noisy local minima that occur when solving the problem in the original
-  space of leaf positions and dose rates vs time.
+  We consider the problem of matching a given fluence map $f$ to a close approximation in limited time $T$ by the use of a multi-leaf collimator,
+  i.e. the setting of IMRT and VMAT in radiation therapy.
+  We use low order polynomial representations for leaf velocities and the dose rate as functions of time.
+  The optimization then searches over the coefficients that define those polynomials, resulting in an optimization problem in a smaller dimension and one that is inherently smoother,
+  thus focusing on global aspects of the solution and avoiding the noisy local minima that occur when solving the problem in the original space of leaf positions and dose rates vs time.
+  \KvAcomment{What makes us `avoid' local minima? In the outer loop, we search the dose rate space using a global search strategy (CMA-ES) but we still search the leaf trajectory space in the inner loop using local search (fminsearch). When we represent leaf trajectories on some grid, this subproblem is non-convex. When we use the continuous representation, we operate in a lower dimensional space, but the problem remains non-convex, right (though less nasty)?}
 \end{abstract}
 
 
