@@ -14,6 +14,9 @@ such that the optimization procedure naturally focuses on global aspects of the 
 
 \MPKcomment{Koos: I put this section in to make sure that I could get the test figures to compile in the main document.
             I'm not sure where they are actually supposed to go.}
+\KvAcomment{The minibixel exposure figure is not really needed anymore. In the administered dose function, I have now illustrated the dose administered to a position x. 
+A minibixel is just an interval, so the dose delivered to a certain minibixel is just the integral of administered dose over that interval.
+The figure assumes that leaves start and end at the same position, $s$ and $e$, respectively. It basically illustrates (\ref{eqn:deliveredFluenceDose}).}
 
 \begin{equation}
 y = e^x
@@ -33,6 +36,10 @@ Our goal is to compute the optimal leaf trajectories $x_L(t)$ and $x_U(t)$, as w
 For this initial study we will consider only a single leaf pair, although our algorithm is structured such that it could be applied to an arbitrary number of leaf pairs.
 
 \MPKcomment{What does the following mean?  {\em REMARK: assuming independence of rows, so no tongue-and-groove effect.}}
+\KvAcomment{The leaves are coupled using a so called tongue-and-groove system. 
+If the ends two adjacent left (or right) are at different positions, the tongue of one of the leaves blocks out a part of field of the other leaf pair, leading to underdosage in that row. 
+We need to neglect the tongue-and-groove effect to be able to optimize the delivery of every fluence row independently.
+Minor thing, but should be noted.}
 
 We will assume that the desired fluence dose at each point $q(x)$ on the subject is given.
 The optimization is given below, where $q'(x)$ is the fluence dose that is delivered by the
@@ -62,3 +69,7 @@ $T(x)$ is the set of all times $t$ such that $ x_L(t) < x < x_U(t)$.
 
 \MPKcomment{Should we assume that the leaf boundary conditions are known?
             Do the leaves need to start and end together?}
+\KvAcomment{Matthew: Do you mean boundaries on the physical location of the leaves? 
+            If so, we can assume that both leaf ends will stay within the treatment field (so if the fluence profile is given on [a,b], the leaves should stay right of a and left of b).
+            It can be suboptimal to start the leaves together, but I'm not sure if we should care too much in this project.
+            David, what do you think?}
