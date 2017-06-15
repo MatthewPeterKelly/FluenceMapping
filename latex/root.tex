@@ -1,133 +1,26 @@
-\documentclass[12pt]{article}
-\usepackage{mathtools,bm}
-\usepackage{amsmath,amsfonts,amssymb}   %% AMS mathematics macros
-\usepackage{graphicx}
-\usepackage{fancyvrb}
-\usepackage{color}
-\usepackage{url}
-\usepackage{hyperref}
-\usepackage{authblk}
-\usepackage{geometry}
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+\input{header}
 
-\linespread{1.4}
- \geometry{
- a4paper,
- total={174mm,257mm},
- left=20mm,
- top=20mm,
- }
- \renewcommand{\floatpagefraction}{.8}
- \renewcommand\Affilfont{\fontsize{9}{10.8}\itshape}
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+\title{Dynamic leaf sequencing via polynomial representations of leaf trajectories and dose rate}
 
-\definecolor{lightblue}{rgb}{0.0,0.5,0.8}
-\newcommand{\todo}[1]{{\color{lightblue}\par {[{\bf TO DO: } {\em #1}} ] \\    }}
-\newcommand{\addref}[1]{{\color{red}{\bf [REF #1]}}}
-\newcommand{\MPKcomment}[1]{{\color{magenta}\par {[{\bf MPK: } { #1}} ] \\    }}
-\newcommand{\DCcomment}[1]{{\color{magenta}\par {[{\bf DC: } { #1}} ] \\    }}
-\newcommand{\KvAcomment}[1]{{\color{magenta}\par {[{\bf KvA: } { #1}} ] \\    }}
-
-
- \title{Dynamic leaf sequencing via polynomial representations of leaf trajectories and dose rate}
-
- \author{Matthew Kelly, Koos van Amerongen, David Craft}
+\author{Matthew Kelly, Koos van Amerongen, David Craft}
 \affil[]{Department of Radiation Oncology, Massachusetts General Hospital, Harvard Medical School}
-%% \date{February 13, 2016}
+%% \date{February 13, 2016}  % Comment to use today's date
 
 \begin{document}
 
 \maketitle
 \thispagestyle{empty}
 
-%\begin{figure}[!htbp]
-%\centering
-%%trim option's parameter order: left bottom right top
-%\includegraphics[trim=0 50 0 0,clip,width=17cm]{clonalTree}
-%\caption{Clonal expansion of a cancer cell population. The population starts exponentially dividing with fitness $f_0$ at time 0.}
-%\label{clonalTree}
-%\end{figure}
-
-
-\begin{abstract}
-  We consider the problem of matching a given fluence map $f$ to a close approximation in limited time $T$ by the use of a multi-leaf collimator,
-  i.e. the setting of IMRT and VMAT in radiation therapy.
-  We use low order polynomial representations for leaf velocities and the dose rate as functions of time.
-  The optimization then searches over the coefficients that define those polynomials, resulting in an optimization problem in a smaller dimension and one that is inherently smoother,
-  thus focusing on global aspects of the solution and avoiding the noisy local minima that occur when solving the problem in the original space of leaf positions and dose rates vs time.
-  \KvAcomment{What makes us `avoid' local minima? In the outer loop, we search the dose rate space using a global search strategy (CMA-ES) but we still search the leaf trajectory space in the inner loop using local search (fminsearch). When we represent leaf trajectories on some grid, this subproblem is non-convex. When we use the continuous representation, we operate in a lower dimensional space, but the problem remains non-convex, right (though less nasty)?}
-\end{abstract}
-
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+\input{abstract}
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 \input{introduction}
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 \input{method}
-
-\section{Methods - template}
-
-[MATT this is copy and pasted from the original ``chebyopt.pdf'' that I sent you. Probably all will need to be revised, but leaving it in case some is salvagable/usable.]
-
-We consider a single row version of the problem. Extension to the full fluence map should be possible, but it makes sense
-to first develop the method and see how it works for a single row. Let $f(x)$ be the desired fluence map to deliver, where
-$x$ is the position across the fluence row, $x \in [-1,1]$. We choose this as the domain because that is the
-domain that the Chebyshev polynomials are written for. Across that domain the Chebyshev polynomials range from $-1$ to $1$.
-We assume we have $T=1$ time unit to reproduce the fluence map $f$ by sliding leaves across the field from left to right.
-Let $v_L(t)$ be the velocity of the left leaf at time $t$ and $v_R(t)$ the right leaf velocity. We assume we fix the starting positions
-of both leaves. We may end up assuming we fix the ending positions too. This is not ideal, in fact we would like to optimize over
-starting and ending leaf positions as well, but to make things more concrete, for now starting positions are assumed fixed and given.
-
-Let $x_L(t)$ be position of the left leaf at time $t$. We have
-\begin{equation}
-  x_L(t) = x_L(0) + \int_{\tau=0}^t v_L(\tau) d\tau.
-\end{equation}
-\noindent (ditto for right leaf). Let $T_L(x)$ be the inverse of this function
-(if we assume/enforce that velocity is always $>0$ then this inverse exists). Thus
-$T_L(x)$ is the time that the left leaf crosses the position $x$. The fluence delivered to position
-$x$, which we call $g(x)$ is the integration of the dose rate over the interval for which the position $x$ is not covered by either leaves,
-see Figure \todo{sketch}.
-
-%\begin{figure}[!htbp]
-%\centering
-%%trim option's parameter order: left bottom right top
-%\includegraphics[trim=0 0 0 0,clip,width=12cm]{sketchCheby.pdf}
-%\caption{Sketch of two leaf trajectories and the integration range (dotted line) for computing $g(x)$.}
-%\label{sketch}
-%\end{figure}
-
-\begin{equation}
-  g(x) = \int_{t = T_R(x)}^{T_L(x)} d(t) dt
-\end{equation}
-\noindent where d(t) is the dose rate at time $t$.
-
-The optimization problem is to find the velocities and the dose rate over time to get $g$ as close to $f$ as possible:
-
-\begin{equation}
-\mathrm{min} \int_{x=-1}^1 \left ( g(x) - f(x) \right )^2 dx
-\end{equation}
-
-ENTER THE CHEBYSHEVS: We represent the velocities $v$ as weighted sums of Chebyshev polynomials of the first kind.
-Here are the first four, for ease of reference:
-$$
-T_0(t) = 1
-$$
-$$
-T_1(t) = t
-$$
-$$
-T_2(t) = 2t^2 -1
-$$
-$$
-T_3(t) = 4t^3 - 3t
-$$
-
-%$$[ 1, x, 2*x^2 - 1, 4*x^3 - 3*x, 8*x^4 - 8*x^2 + 1]
-
-So, for example, the left leaf velocity is given by
-$$
-v_L(t) = \sum_{i=0}^3 c^L_i T_i(t).
-$$
-\noindent and we can do the same for the right leaf velocity and the dose rate as a function of time.
-The optimization problem them becomes a search for the coefficients $c^L_i$, $c^R_i$, and $c^d_i$ that minimize the objective in Equation \ref{opt}.
 
 \section{Results}
 
