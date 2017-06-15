@@ -1,8 +1,11 @@
 \begin{abstract}
   We consider the problem of matching a given fluence map $f$ to a close approximation in limited time $T$ by the use of a multi-leaf collimator,
   i.e. the setting of IMRT and VMAT in radiation therapy.
-  We use low order polynomial representations for leaf velocities and the dose rate as functions of time.
+  We use low order polynomial splines for leaf position and the dose rate as functions of time.
   The optimization then searches over the coefficients that define those polynomials, resulting in an optimization problem in a smaller dimension and one that is inherently smoother,
   thus focusing on global aspects of the solution and avoiding the noisy local minima that occur when solving the problem in the original space of leaf positions and dose rates vs time.
+  We avoid local minima by biasing the optimization towards simple solutions.
+  This is done by first solving the optimization on a coarse grid, and then iteratively refining the grid to produce higher-fidelity results.
   \KvAcomment{What makes us `avoid' local minima? In the outer loop, we search the dose rate space using a global search strategy (CMA-ES) but we still search the leaf trajectory space in the inner loop using local search (fminsearch). When we represent leaf trajectories on some grid, this subproblem is non-convex. When we use the continuous representation, we operate in a lower dimensional space, but the problem remains non-convex, right (though less nasty)?}
+  \MPKcomment{We are still subject to local minima issues. Hopefully the above technique is somewhat effective at finding decent solutions - I still need to code that part.}
 \end{abstract}
