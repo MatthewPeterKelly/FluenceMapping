@@ -1,26 +1,3 @@
-\documentclass[border={5pt 5pt 5pt 5pt}, preview]{standalone}
-
-% Math & Symbol packages
-\usepackage{amsmath}
-\usepackage{amssymb}
-
-% Graphics & Float packages
-\usepackage{float}
-\usepackage{graphicx}
-\usepackage{subfigure}
-\usepackage{tikz}
-\usetikzlibrary{patterns, arrows.meta, calc}
-\usepackage{pgfplots}
-\pgfplotsset{compat=newest}
-
-% Colors
-\usepackage{xcolor}
-\definecolor{HMSRed}{HTML}{C5112E}  % [197, 17, 46]
-\definecolor{MGHBlue}{HTML}{008BB0} % [0, 139, 176]
-\definecolor{MGHGrey}{HTML}{626365} % [98, 99, 101]
-
-\begin{document}
-
 \begin{figure}[htp]
 \centering
     \begin{tikzpicture}
@@ -77,13 +54,11 @@
             \node[color=MGHGrey] at (10.0,8.5) {\scriptsize{$0$}};
         \end{axis}
     \end{tikzpicture}
-    
+
 \caption[Illustration of the total minibixel exposure $g_p$, $p \in \mathcal{P}\backslash\{P\}$]{
     Illustration of the total minibixel exposure $g_p$, $p \in \mathcal{P}\backslash\{P\}$.
-    The total minibixel exposure is calculated using four cases, see \eqref{eq:LRG}.
+    The total minibixel exposure is calculated using four cases, see \addref{miniBixelEqn}.
     Closed and open dots indicate the trajectory of the left and right leaf, respectively.
     }
-\label{fig: exp cases}
+\label{fig:minibixelExposure}
 \end{figure}
-
-\end{document} 
