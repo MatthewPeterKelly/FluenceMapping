@@ -60,8 +60,9 @@ dose = 4*rand(1, nTime);
 
 nSub = 10; % number of sub-segments between each point in tGrid
 tGridQuad = subSampleGrid(tGrid, nSub);
+tic
 fGrid = getFluence(xGrid, tGrid, xLow, xUpp, dose, alpha, tGridQuad);
-
+toc
 
 % Plots!
 figure(5234); clf;
