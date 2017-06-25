@@ -28,8 +28,9 @@ dose.rGrid = 3*rand(1, nGrid);
 guess = [];
 
 % Create a smooth test fluence map:
-xFluence = linspace(xBnd(1), xBnd(2), 5);
-fFluence = rand(1,5); fFluence([1,end]) = 0;
+nModel = 5;
+xFluence = linspace(xBnd(1), xBnd(2), nModel);
+fFluence = rand(1,nModel); fFluence([1,end]) = 0;
 nFluenceGrid = 25;
 target.xGrid = linspace(xBnd(1), xBnd(2), nFluenceGrid);
 target.fGrid = pchip(xFluence',fFluence',target.xGrid')';

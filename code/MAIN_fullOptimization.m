@@ -15,13 +15,13 @@ rBnd = [0, 4]; % bounds on dose rate
 
 % parameters for the leaf trajectory fitting
 param.limits.velocity = vBnd;
-param.smooth.leafBlocking = 0.02*diff(xBnd);
-param.smooth.velocityObjective = 1e-6;
-param.nSubSample = 8;
+param.smooth.leafBlocking = 0.03*diff(xBnd);
+param.smooth.velocityObjective = 1e-5;
+param.nSubSample = 5;
 param.guess.defaultLeafSpaceFraction = 0.2;
 
 % Parameters for dose trajectory fitting
-param.smooth.doseObjective = 1e-3;  
+param.smooth.doseObjective = 1e-2;
 
 % parameters for fmincon:
 param.fmincon = optimset(...
@@ -31,7 +31,7 @@ param.fmincon = optimset(...
     'TolX', 1e-3);
 
 % Initial guess at the dose rate trajectory
-nGrid = 4;
+nGrid = 5;
 dose.tGrid = linspace(tBnd(1), tBnd(2), nGrid);
 dose.rGrid = mean(rBnd)*ones(1,nGrid);
 
@@ -95,10 +95,6 @@ subplot(2,2,1); hold on;
 plot(soln.target.fGrid, soln.target.xGrid,'rx')
 plot(fFluencePlot, xFluencePlot,'r-','LineWidth',1)
 plot(soln.target.fSoln, soln.target.xGrid,'k--o','LineWidth',2)
-xlabel('time')
-ylabel('fluence dose')
+xlabel('fluence dose')
+ylabel('position')
 legend('Fitting Points','Fluence Target', 'Fluence Soln');
-
-
-
-

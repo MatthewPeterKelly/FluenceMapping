@@ -148,10 +148,22 @@ alpha = param.smooth.leafBlocking;
 beta = param.smooth.velocityObjective;
 
 fGrid = getFluence(target.xGrid, dose.tGrid, xLow, xUpp, dose.rGrid, alpha, tGridQuad);
-objFit  = mean((fGrid - target.fGrid).^2);
+fErr = (fGrid - target.fGrid).^2;
 
-objSmooth = beta*(sum(vLow.^2) + sum(vUpp.^2));
+% Trapezoid rule:
+xLow = target.xGrid(1:(end-1));
+xUpp = target.xGrid(2:end);
+eLow = fErr(1:(end-1));
+eUpp = fErr(2:end);
+objFit = 0.5*sum((xUpp - xLow).*(eLow + eUpp));
+
+% Rectangle rule:
+tA = dose.tGrid(1:(end-1));
+tB = dose.tGrid(2:end);
+objVelLow = sum((tB - tA).*(vLow.^2));
+objVelUpp = sum((tB - tA).*(vUpp.^2));
+
+objSmooth = beta*(objVelLow + objVelUpp);
 
 obj = objFit + objSmooth;
 end
-

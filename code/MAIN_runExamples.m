@@ -15,7 +15,7 @@ xBnd = [min(fluenceTargetData.sx), max(fluenceTargetData.sx)];   % bounds on lea
 vBnd = [0, 3];  % bounds on leaf velocity
 rBnd = [0, 10]; % bounds on dose rate
 
-nGrid = 5;  % Number of grid points for trajectories 
+nGrid = 5;  % Number of grid points for trajectories
 
 % parameters for the leaf trajectory fitting
 param.limits.velocity = vBnd;
@@ -59,7 +59,7 @@ options.DispModulo = 1;
 guess = [];
 
 % Sample the fluence map:
-target.xGrid = linspace(xBnd(1), xBnd(2), 20);  %sub-sample the data 
+target.xGrid = linspace(xBnd(1), xBnd(2), 20);  %sub-sample the data
 target.fGrid = interp1(fluenceTargetData.sx', fluenceTargetData.sf', target.xGrid')';
 
 %% Call CMAES
@@ -88,15 +88,9 @@ ylabel('fluence dose')
 fluenceHandle.YLim(1) = 0.0;
 
 subplot(2,2,1); hold on;
-
-
 plot(soln.target.fGrid, soln.target.xGrid,'rx')
 plot(fluenceTargetData.sf, fluenceTargetData.sx,'r-','LineWidth',1);
 plot(soln.target.fSoln, soln.target.xGrid,'k--o','LineWidth',2)
-xlabel('time')
-ylabel('fluence dose')
+xlabel('fluence dose')
+ylabel('position')
 legend('Fitting Points','Fluence Target', 'Fluence Soln');
-
-
-
-
