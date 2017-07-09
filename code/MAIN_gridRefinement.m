@@ -1,7 +1,7 @@
 % This script loads one of the sample fluence-fitting problems and solves
 % it using nested optimization with CMAES and FMINCON
 
-% NOTE: this does not seem to perform any better than just running with 
+% NOTE: this does not seem to perform any better than just running with
 %       a single optimization with 5 grid points. In fact it seems worse.
 
 %%
@@ -26,7 +26,7 @@ rBnd = [0, 10]; % bounds on dose rate
 
 % parameters for the leaf trajectory fitting
 param.limits.velocity = vBnd;
-param.smooth.leafBlocking = 0.02*diff(xBnd);   % 0.01 = more precise, 0.1 = faster
+param.smooth.leafBlocking = 0.01*diff(xBnd);   % 0.01 = more precise, 0.1 = faster
 param.smooth.velocityObjective = 1e-6;   % 1e-6 = more precise, 1e-3 faster, smooth leaf traj
 param.nSubSample = 4;  % 10 = more precise, 2 = faster
 param.guess.defaultLeafSpaceFraction = 0.2;
@@ -42,20 +42,20 @@ param.fmincon = optimset(...
     'TolX', 1e-3);
 
 % Iterative grid solve:
-for iMeshIter = 1:schedule.count 
-    
+for iMeshIter = 1:schedule.count
+
     nGrid = schedule.grid(iMeshIter);  % Number of grid points for trajectories
-    
+
     % Initial guess at the dose rate trajectory
     dose.tGrid = linspace(tBnd(1), tBnd(2), nGrid);
     dose.rGrid = mean(rBnd)*ones(1,nGrid);
-    
+
     % Set up the initial guess, limits, and search domain for cmaes
     zGuess = dose.rGrid';
     zLow = rBnd(1)*ones(nGrid,1);
     zUpp = rBnd(2)*ones(nGrid,1);
     zSigma = schedule.sigma(iMeshIter)*(zUpp - zLow);
-    
+
     % Set up the options for CMAES
     options = cmaes('defaults');
     options.LBounds = zLow;
@@ -66,7 +66,7 @@ for iMeshIter = 1:schedule.count
     options.TolFun = 1e-4;
     options.EvalInitialX = 'yes';
     options.DispModulo = 1;
-    
+
     if iMeshIter == 1   % Use the default initialization
         guess = [];
     else  % Use previous solution as initialization
@@ -74,19 +74,19 @@ for iMeshIter = 1:schedule.count
         guess.xLow = soln(iMeshIter-1).traj.xLow;
         guess.xUpp = soln(iMeshIter-1).traj.xUpp;
     end
-    
+
     % Sample the fluence map:
     target.xGrid = linspace(xBnd(1), xBnd(2), 20);  %sub-sample the data
     target.fGrid = interp1(fluenceTargetData.sx', fluenceTargetData.sf', target.xGrid')';
-    
+
     %% Call CMAES
     [xMin, fMin, countEval, stopFlag, output, bestEver] = cmaes(...
         'leafTrajFitObj', zGuess, zSigma, options, ...  % standard arguments
         dose, guess, target, param);  % pass through to objective
-    
+
     %% Get the best-ever solution:
     [objVal, soln(iMeshIter)] = leafTrajFitObj(bestEver.x, dose, guess, target, param); %#ok<SAGROW>
-    
+
 end
 
 %% Plots!
@@ -113,7 +113,3 @@ plot(soln(end).target.fSoln, soln(end).target.xGrid,'k--o','LineWidth',2)
 xlabel('fluence dose')
 ylabel('position')
 legend('Fitting Points','Fluence Target', 'Fluence Soln');
-
-
-
-

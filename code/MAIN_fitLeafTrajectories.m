@@ -1,5 +1,5 @@
 % This script creates a sample fluence-fitting problem, generates a random
-% dose-rate trajectory, and then computes the leaf-trajectories that 
+% dose-rate trajectory, and then computes the leaf-trajectories that
 % do the best job of fitting those trajectories.
 
 clc; clear;
@@ -10,7 +10,7 @@ vBnd = [0, 0.5];
 
 % parameters for the leaf trajectory fitting
 param.limits.velocity = vBnd;
-param.smooth.leafBlocking = 0.05*diff(xBnd);
+param.smooth.leafBlocking = 0.025*diff(xBnd);
 param.smooth.velocityObjective = 1e-5;
 param.nSubSample = 10;
 param.guess.defaultLeafSpaceFraction = 0.25;
@@ -65,7 +65,3 @@ plot(soln.target.fSoln, soln.target.xGrid,'k--o','LineWidth',2)
 xlabel('time')
 ylabel('fluence dose')
 legend('Fitting Points','Fluence Target', 'Fluence Soln');
-
-
-
-

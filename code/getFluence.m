@@ -4,7 +4,7 @@ function fGrid = getFluence(xGrid, tGrid, xLow, xUpp, dose, alpha, tGridQuad)
 % Compute the fluence (fGrid) at each point (xGrid), given the leaf
 % positions (xLow and xUpp) and dose rate (dose) as piecewise linear
 % functions of time (tGrid). Smoothing parameter alpha is used to smooth
-% the leaf blocking dose step function. Numerical integrals are computed 
+% the leaf blocking dose step function. Numerical integrals are computed
 % by sub-sampling the time grid with nSub grid points per segment.
 %
 
@@ -24,8 +24,8 @@ xUppQuadGrid = interp1(tGrid', xUpp', tGridQuad')';
 
 % if negative, then radiation is blocked
 xDelLow = xGrid'*ones(1,nq) - ones(nx,1)*xLowQuadGrid;
-xDelUpp = ones(nx,1)*xUppQuadGrid - xGrid'*ones(1,nq);  
-kLowPass = smoothStep(xDelLow, alpha); 
+xDelUpp = ones(nx,1)*xUppQuadGrid - xGrid'*ones(1,nq);
+kLowPass = smoothStep(xDelLow, alpha);
 kUppPass = smoothStep(xDelUpp, alpha);
 passThrough = kLowPass.*kUppPass;
 
@@ -49,7 +49,7 @@ function getFluence_test()
 
 xBnd = [0, 2];
 xGrid = linspace(xBnd(1), xBnd(2), 20);
-alpha = 0.1*diff(xBnd);
+alpha = 0.05*diff(xBnd);
 
 nTime = 6;
 tGrid = linspace(0, 5, nTime);

@@ -13,7 +13,7 @@ function x = smoothStep(t,alpha)
 %   x = smooth version of the step function
 %
 % NOTES:
-%   The smoothing is done using a 5th-order polynomial. 
+%   The smoothing is done using a 5th-order polynomial.
 %   The output is has continuous second derivatives.
 %   The implementation is vectorized.
 %   Transient region is centered on zero.
@@ -24,8 +24,8 @@ if nargin == 0
     return;
 end
 
-tLow = -0.5*alpha;  % lower transition threshold
-tUpp = 0.5*alpha;  % upper transition threshold
+tLow = -alpha;  % lower transition threshold
+tUpp = alpha;  % upper transition threshold
 x = zeros(size(t));
 
 idxZero = t <= tLow;
@@ -56,7 +56,7 @@ end
 function smoothStep_test()
 
 alpha = 0.1;
-t = linspace(-1.2*alpha, 1.2*alpha, 150);
+t = linspace(-1.8*alpha, 1.8*alpha, 150);
 
 figure(5243); clf; hold on;
 plot(t,smoothStep(t, alpha));
