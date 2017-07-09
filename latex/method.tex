@@ -5,7 +5,7 @@
 
 The final goal of our optimization is to compute three trajectories:
 radiation dose-rate $r(t)$, lower leaf position $z_L(t)$, and upper leaf position $z_U(t)$.
-Each of these trajectories is represented by a piece-wise linear spline,
+Each of these trajectories is represented by a piecewise linear spline,
 with shared knot times $t_k \in \{t_0, t_1, \dots, t_N\}$, where $N$ is the number of knot points.
 The value of the dose rate and leaf positions at knot time $t_k$ are given by
 $r_k$, $x_{L,k}$, and $y_{U,k}$ respectively.
@@ -19,10 +19,12 @@ to ensure that we can run the solution trajectory on the VMAT machine.
 \MPKcomment{Is this correct usage of VMAT machine?}
 These limits are detailed below, where $\dot{z}(t) = \tfrac{d}{dt}z(t)$ gives the leaf velocity.
 \begin{align}
-  \text{dose-rate: }& \quad 0 \leq r(t) \leq r_\text{max} \\
-  \text{leaf position: }& \quad 0 \leq z_L(t) \leq z_U(t) \leq x_\text{max} \\
+  \text{dose-rate: }& \quad 0 \leq r(t) \leq r_\text{max}
+      \label{eqn:FirstTrajectoryConstraint}\\
+  \text{leaf position: }& \quad x_{min} \leq z_L(t) \leq z_U(t) \leq x_\text{max} \\
   \text{lower leaf velocity: }& \quad v_\text{min} \leq \dot{z}_L(t) \leq v_\text{max} \\
   \text{upper leaf velocity: }& \quad v_\text{min} \leq \dot{z}_U(t) \leq v_\text{max}
+      \label{eqn:LastTrajectoryConstraint}
 \end{align}
 
 \subsection{Avoiding Local Minima}
@@ -68,14 +70,22 @@ which can cause issues when putting this integral inside of an objective functio
 
 Our solution is to rewrite the integral using a blocking function $k(t)$,
 which has a value of one when the leaves are passing radiation and
-zero when the leaves are blocking radiation.
+zero when the leaves are blocking radiation, as described in \S\ref{sec:modelingFluenceBlocking}
 This allows us to rewrite (\ref{eqn:fluenceMapIntegral}) to use simple bounds:
 
 \begin{equation}
   f_D(x) = \int_0^T \! k(t, x) \cdot r(t) \, dt
 \end{equation}
 
-A simple way to define $k(t)$ would be to set it to one if $z_L(t) \leq x \leq z_U(t)$
+Now we have a standard scalar integral, where the integrand is smooth and the
+bounds are constant, we can use any quadrature method to evaluate the integral.
+In this case we use the trapezoid rule with a dense grid spacing.
+
+\subsection{Modeling Fluence Blocking}
+\label{sec:modelingFluenceBlocking}
+
+A simple way to define the fluence blocking function $k(t)$
+would be to set it to one if $z_L(t) \leq x \leq z_U(t)$
 is true, and zero otherwise.
 This implementation would have a discontinuous gradient, which would cause problems in the optimization.
 Instead, we use a polynomial smoothing to approximate the step function $s(x,\alpha)$,
@@ -98,3 +108,75 @@ Note that the function $s(x,\alpha)$ has continuous value, slope, and curvature.
 \begin{equation}
   \tau(x) = \frac{x + \alpha}{2\alpha}
 \end{equation}
+
+\subsection{Objective Function}
+
+The objective function for the inner optimization (computing leaf trajectories)
+is a weighted combination between the fitting error and the smoothing regularizaiton.
+The fluence fitting objective is the integral of the squared-error
+between the target fluence $f_T(x)$ and the delivered fluence $f_D(x)$.
+
+\begin{equation}
+  J_\text{fit} = \int_{x_{min}}^{x_{max}} \! \big( f_T(x) - f_D(x) \big)^2 \,dx
+\end{equation}
+
+Like the other integrals, we evaluate this integral using the trapezoid rule,
+although the specific choice of quadrature method is not important.
+
+The final objective function is a weighted combination of the
+fitting objective $J_\text{fit}$ and the smoothing objective $J_\text{vel}$.
+Since the fitting objective is an integral over position, and the smoothing objective
+is computed over time, we normalize both before combining.
+
+\begin{equation}
+  J = \frac{1}{(x_{max} - x_{min})} J_\text{fit}
+    + \frac{\beta}{T} J_\text{vel}
+\label{eqn:FluenceFittingObjective}
+\end{equation}
+
+\subsection{Transcription to a Nonlinear Program}
+
+The inner optimization loop computes the leaf trajectories ($z_L(t), z_U(t)$)
+that minimize the objective function (\ref{eqn:FluenceFittingObjective})
+and satisfy the constraints (\ref{eqn:FirstTrajectoryConstraint}--\ref{eqn:LastTrajectoryConstraint}).
+
+Since we represent the position trajectories $z_L(t)$ and $z_U(t)$ as piecewise linear,
+it is natural to represent them by their values at the knot points $t_i$.
+The position trajectory is piecewise linear, thus it follows that we should represent the
+velocity trajectory as piecewise constant.
+Here we will use a direct collocation transcription method, where the velocity for the
+lower $v_L$ and upper $v_U$ leaves are decision variables.
+is a decision variable in the optimization,
+and we add a constraint to ensure that the velocity is the derivative of position.
+This is done to keep the gradients in the optimization sparse. \addref{John T. Betts}
+We with our quadrature calculations, we will use trapezoidal quadrature for the integral constraint.
+We will define the segment duration $h_k = (t_{k+1} - t_k)$.
+
+\begin{align}
+  v_{L,k} & = \tfrac{1}{2} h_k \cdot  \big( z_{L, k} + z_{L, k+1} \big)
+  \quad \quad \forall k\\
+  v_{U,k} & = \tfrac{1}{2} h_k \cdot  \big( z_{U, k} + z_{U, k+1} \big)
+  \quad \quad \forall k\\
+\end{align}
+
+The limits on leaf position and velocity can be implemented as a combination of
+constant bounds and linear inequality constraints:
+
+\begin{equation}
+  x_\text{min} \leq x_{L, k}
+  \quad \quad
+  x_{U, k} \leq x_\text{max}
+  \quad \quad
+  x_{L, k} \leq x_{U, k}
+  \quad \quad
+  \forall k
+\end{equation}
+
+\begin{equation}
+  v_\text{min} \leq v_{L,k} \leq v_\text{max}
+  \quad \quad
+  v_\text{min} \leq v_{U,k} \leq v_\text{max}
+  \quad \quad \forall k
+\end{equation}
+
+\todo{Add a summary sentence about how to pack everything up into a NLP solver}
