@@ -71,14 +71,15 @@ which can cause issues when putting this integral inside of an objective functio
 Our solution is to rewrite the integral using a blocking function $k(t)$,
 which has a value of one when the leaves are passing radiation and
 zero when the leaves are blocking radiation, as described in \S\ref{sec:modelingFluenceBlocking}
-This allows us to rewrite (\ref{eqn:fluenceMapIntegral}) to use simple bounds:
+This allows us to rewrite (\ref{eqn:fluenceMapIntegral}) using the bounds $[0, \mathcal{T}]$:
 
 \begin{equation}
   f_D(x) = \int_0^T \! k(t, x) \cdot r(t) \, dt
+  \label{eqn:fluenceDoseSimpleBounds}
 \end{equation}
 
 Now we have a standard scalar integral, where the integrand is smooth and the
-bounds are constant, we can use any quadrature method to evaluate the integral.
+bounds are constant, we can use any quadrature method to evaluate (\ref{eqn:fluenceDoseSimpleBounds}).
 In this case we use the trapezoid rule with a dense grid spacing.
 
 \subsection{Modeling Fluence Blocking}

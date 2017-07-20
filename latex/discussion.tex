@@ -1,0 +1,28 @@
+\section{Discussion}
+
+\subsection{Why first-order splines?}
+\todo{Clean up this explanation -- it was copied from email}
+
+I ended up deciding to use a low-order trajectory representation (piece-wise linear splines) for the trajectories.
+I found that this made the calculations much faster and also numerically more stable.
+The leaf trajectories seem to reliably converge to a good solution now.
+
+Why use a linear spline instead of a single polynomial?
+\begin{itemize}
+  \item using a higher-order polynomial is typically done to get a more accurate solution,
+      since the convergence rate is related to order of the polynomial. In our case this breaks down because of the nasty integral in the fluence map calculation.
+  \item consider a comparison of a single cubic polynomial vs three linear segments.
+      The linear segments are locally coupled while the cubic polynomial is globally coupled.
+      This makes optimization over the linear segments faster.
+  \item for trajectory optimization with constraints (in this case, position, velocity, and rate limits),
+      it is generally better to use a low-order spline.
+      This allows us to enforce the limits at the knot points, and be sure that they will be satisfied between them.
+  \item the smoothness that we get from the cubic seems to be offset by the difficulty of the
+      optimization to converge to a good solution.
+  \item we can force smooth solutions from the piecewise linear trajectory by adding a
+      regularization term (minimizing the integral of velocity-squared) to the objective function.
+  \item we can increase the accuracy by increasing the number of grid points.
+  \item the linear spline with the regularization term seems better at avoiding local minima than the cubic spline
+\end{itemize}
+
+In practice, the version of the code with linear splines seems to reliably converge to good leaf trajectories (given an arbitrary dose rate profile). Adding more grid points refines the accuracy of the solution, and the regularization term seems to do a good job of avoiding local minima. We can discuss more over the phone as well. I think that it would be good for me to get a better understanding of how the existing methods work, so that I can compare and contrast them with this method.
