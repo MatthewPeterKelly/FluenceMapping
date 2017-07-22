@@ -10,13 +10,19 @@ with shared knot times $t_k \in \{t_0, t_1, \dots, t_N\}$, where $N$ is the numb
 The value of the dose rate and leaf positions at knot time $t_k$ are given by
 $r_k$, $x_{L,k}$, and $y_{U,k}$ respectively.
 
-\todo{add figure for linear spline?}
+\begin{figure}
+  \centering
+  \includegraphics{fig/linearSpline.pdf}
+  \caption{Linear Spline. We represent the dose-rate and leaf position trajectories as linear
+           splines. A linear spline is fully defined by its value at the knot points. }
+  \label{fig:linearSpline}
+\end{figure}
 
 \subsection{Trajectory Limits}
 
-There are several constant limits that must be enforced along the trajectory
-to ensure that we can run the solution trajectory on the VMAT machine.
-\MPKcomment{Is this correct usage of VMAT machine?}
+There are several constraints imposed on the dose-rate and leaf trajectories
+by the physical limitations of the VMAT machine. Specifically, there is a maximum dose-rate,
+constant limits on the leaf positions, and an upper limit on the leaf speed.
 These limits are detailed below, where $\dot{z}(t) = \tfrac{d}{dt}z(t)$ gives the leaf velocity.
 \begin{align}
   \text{dose-rate: }& \quad 0 \leq r(t) \leq r_\text{max}
@@ -149,7 +155,7 @@ Here we will use a direct collocation transcription method, where the velocity f
 lower $v_L$ and upper $v_U$ leaves are decision variables.
 is a decision variable in the optimization,
 and we add a constraint to ensure that the velocity is the derivative of position.
-This is done to keep the gradients in the optimization sparse. \addref{John T. Betts}
+This is done to keep the gradients in the optimization sparse \ref{Betts2010}.
 We with our quadrature calculations, we will use trapezoidal quadrature for the integral constraint.
 We will define the segment duration $h_k = (t_{k+1} - t_k)$.
 

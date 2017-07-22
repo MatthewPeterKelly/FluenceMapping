@@ -15,7 +15,7 @@ rBnd = [0, 4]; % bounds on dose rate
 
 % parameters for the leaf trajectory fitting
 param.limits.velocity = vBnd;
-param.smooth.leafBlocking = 0.015*diff(xBnd);
+param.smooth.leafBlocking = 400/diff(xBnd);
 param.smooth.velocityObjective = 1e-5;
 param.nSubSample = 5;
 param.guess.defaultLeafSpaceFraction = 0.2;
@@ -51,6 +51,8 @@ options.TolX = 0.01*diff(rBnd);
 options.TolFun = 1e-4;
 options.EvalInitialX = 'yes';
 options.DispModulo = 1;
+options.SaveVariables = 'off';
+options.SaveFilename = '';
 
 % Use the default initialization for leaf trajectories for now
 guess = [];

@@ -26,7 +26,7 @@ rBnd = [0, 10]; % bounds on dose rate
 
 % parameters for the leaf trajectory fitting
 param.limits.velocity = vBnd;
-param.smooth.leafBlocking = 0.01*diff(xBnd);   % 0.01 = more precise, 0.1 = faster
+param.smooth.leafBlocking = 500/diff(xBnd);   % 0.01 = more precise, 0.1 = faster
 param.smooth.velocityObjective = 1e-6;   % 1e-6 = more precise, 1e-3 faster, smooth leaf traj
 param.nSubSample = 4;  % 10 = more precise, 2 = faster
 param.guess.defaultLeafSpaceFraction = 0.2;

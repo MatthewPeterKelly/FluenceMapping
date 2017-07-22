@@ -10,7 +10,7 @@ vBnd = [0, 0.5];
 
 % parameters for the leaf trajectory fitting
 param.limits.velocity = vBnd;
-param.smooth.leafBlocking = 0.025*diff(xBnd);
+param.smooth.leafBlocking = 200/diff(xBnd);
 param.smooth.velocityObjective = 1e-5;
 param.nSubSample = 10;
 param.guess.defaultLeafSpaceFraction = 0.25;
@@ -30,7 +30,7 @@ guess = [];
 % Create a smooth test fluence map:
 nModel = 5;
 xFluence = linspace(xBnd(1), xBnd(2), nModel);
-fFluence = rand(1,nModel); fFluence([1,end]) = 0;
+fFluence = 4*rand(1,nModel); fFluence([1,end]) = 0;
 nFluenceGrid = 25;
 target.xGrid = linspace(xBnd(1), xBnd(2), nFluenceGrid);
 target.fGrid = pchip(xFluence',fFluence',target.xGrid')';
