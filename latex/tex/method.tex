@@ -77,7 +77,7 @@ which can cause issues when putting this integral inside of an objective functio
 Our solution is to rewrite the integral using a blocking function $k(t)$,
 which has a value of one when the leaves are passing radiation and
 zero when the leaves are blocking radiation, as described in \S\ref{sec:modelingFluenceBlocking}
-This allows us to rewrite (\ref{eqn:fluenceMapIntegral}) using the bounds $[0, \mathcal{T}]$:
+This allows us to rewrite (\ref{eqn:fluenceMapIntegral}) using the constant bounds $[0, \mathcal{T}]$:
 
 \begin{equation}
   f_D(x) = \int_0^T \! k(t, x) \cdot r(t) \, dt
@@ -95,25 +95,17 @@ A simple way to define the fluence blocking function $k(t)$
 would be to set it to one if $z_L(t) \leq x \leq z_U(t)$
 is true, and zero otherwise.
 This implementation would have a discontinuous gradient, which would cause problems in the optimization.
-Instead, we use a polynomial smoothing to approximate the step function $s(x,\alpha)$,
-where $\alpha$ is a smoothing parameter.
-Note that the function $s(x,\alpha)$ has continuous value, slope, and curvature.
+Instead, we use exponential smoothing to approximate the step function $s(x,\alpha)$,
+where $\alpha$ is a small smoothing parameter.
+A smaller smoothing parameter will provide a more accurate model,
+while a larger smoothing parameter will lead to faster optimization.
 
 \begin{equation}
   k(t, x) = s\big(x - z_L(t), \alpha\big) \; \cdot \; s\big(z_U(t) - z, \alpha\big)
 \end{equation}
 
 \begin{equation}
-  s(x, \alpha) =
-    \begin{cases}
-      0, & \text{for } x \leq -\alpha \\
-      6\tau^5-15\tau^4+10\tau^3, & \text{for }  -\alpha < x < \alpha\\
-      1, & \text{for } x \geq \alpha
-    \end{cases}
-\end{equation}
-
-\begin{equation}
-  \tau(x) = \frac{x + \alpha}{2\alpha}
+  s(t, \alpha) = \frac{1}{1 + e^{-t/\alpha}}
 \end{equation}
 
 \subsection{Objective Function}

@@ -79,16 +79,19 @@ problem.solver = 'fmincon';
 problem.options = param.fmincon;
 
 % solve:
+startTime = tic;
 [zSoln, fSoln, exitFlag] = fmincon(problem);
+nlpTime = toc(startTime);
 [xLow, xUpp] = unpackDecVars(zSoln);
-alpha = param.smooth.leafBlocking;
-target.fSoln = getFluence(target.xGrid, dose.tGrid, xLow, xUpp, dose.rGrid, alpha, tGridQuad);
+gamma = param.smooth.leafBlocking;
+target.fSoln = getFluence(target.xGrid, dose.tGrid, xLow, xUpp, dose.rGrid, gamma, tGridQuad);
 
 % pack up solution:
 soln.traj.xLow = xLow;
 soln.traj.xUpp = xUpp;
 soln.obj = fSoln;
 soln.exitFlag = exitFlag;
+soln.nlpTime = nlpTime;
 soln.problem = problem;
 soln.traj.time = dose.tGrid;
 soln.traj.dose = dose.rGrid;
@@ -144,10 +147,10 @@ function [obj, fGrid] = fluenceFittingObjective(zGuess, dose, target, param, tGr
 
 [xLow, xUpp, vLow, vUpp] = unpackDecVars(zGuess);
 
-alpha = param.smooth.leafBlocking;
+gamma = param.smooth.leafBlocking;
 beta = param.smooth.velocityObjective;
 
-fGrid = getFluence(target.xGrid, dose.tGrid, xLow, xUpp, dose.rGrid, alpha, tGridQuad);
+fGrid = getFluence(target.xGrid, dose.tGrid, xLow, xUpp, dose.rGrid, gamma, tGridQuad);
 fErr = (fGrid - target.fGrid).^2;
 
 % Trapezoid rule:

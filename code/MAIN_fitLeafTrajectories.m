@@ -11,7 +11,7 @@ vBnd = [0, 0.5];
 % parameters for the leaf trajectory fitting
 param.limits.velocity = vBnd;
 param.smooth.leafBlocking = 200/diff(xBnd);
-param.smooth.velocityObjective = 1e-5;
+param.smooth.velocityObjective = 1e-2;
 param.nSubSample = 10;
 param.guess.defaultLeafSpaceFraction = 0.25;
 
