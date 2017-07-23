@@ -32,37 +32,41 @@ end
 
 % Interpolate the guess to get the initial leaf trajectories.
 nTime = length(dose.tGrid);
-hSeg = diff(dose.tGrid);
 xLowGuess = interp1(guess.tGrid', guess.xLow', dose.tGrid')';
 xUppGuess = interp1(guess.tGrid', guess.xUpp', dose.tGrid')';
-vLowGuess = diff(xLowGuess)./hSeg;
-vUppGuess = diff(xUppGuess)./hSeg;
 
 % Bounds and initialization:
 xLow = xBnd(1)*ones(1, nTime);
 xUpp = xBnd(2)*ones(1, nTime);
 vLow = vBnd(1)*ones(1, nTime-1);
 vUpp = vBnd(2)*ones(1, nTime-1);
-zLow = packDecVars(xLow, xLow, vLow, vLow);
-zUpp = packDecVars(xUpp, xUpp, vUpp, vUpp);
-zGuess = packDecVars(xLowGuess, xUppGuess, vLowGuess, vUppGuess);
+zLow = packDecVars(xLow, xLow);
+zUpp = packDecVars(xUpp, xUpp);
+zGuess = packDecVars(xLowGuess, xUppGuess);
 
 % Constraint: xLow - xUpp <= 0
-Aineq = [diag(ones(nTime,1)), diag(-ones(nTime,1)), zeros(nTime, 2*nTime -2)];
-bineq = zeros(nTime,1);
+Aineq_xLim = [diag(ones(nTime,1)), diag(-ones(nTime,1))];
+bineq_xLim = zeros(nTime,1);
 
-% Constraint: xLow(i) + h(i)*vLow(i) = xLow(i+1);
-nSeg = nTime - 1;
-Aeq = zeros(2*nSeg, 4*nTime - 2);
-beq = zeros(2*nSeg, 1);
-for i = 1:nSeg
-    Aeq(i,i) = 1;  % xLow(i)
-    Aeq(i,i+1) = -1;  % -xLow(i+1)
-    Aeq(i,2*nTime + i) = hSeg(i);  % h(i)*vLow(i)
-    Aeq(nSeg + i,nTime + i) = 1;  % xLow(i)
-    Aeq(nSeg + i,nTime +i+1) = -1;  % -xLow(i+1)
-    Aeq(nSeg + i,2*nTime + nTime-1 + i) = hSeg(i);  % h(i)*vLow(i)
-end
+% Constraint: -hSeg*diff(xLow) <= -vLow   ;   hSeg*diff(xLow) <= vUpp 
+nSeg = nTime-1;
+hSeg = diff(dose.tGrid);
+diffMat = [zeros(nSeg,1), eye(nSeg)] - [eye(nSeg), zeros(nSeg,1)];
+Aineq_vLow = [-diffMat, zeros(nSeg, nTime);  
+              diffMat, zeros(nSeg, nTime)];
+bineq_vLow = [-(vLow.*hSeg)';
+              (vUpp.*hSeg)'];
+          
+% Constraint: -hSeg*diff(xUpp) <= -vLow   ;   hSeg*diff(xLow) <= vUpp 
+diffMat = [zeros(nSeg,1), eye(nSeg)] - [eye(nSeg), zeros(nSeg,1)];
+Aineq_vUpp = [zeros(nSeg, nTime), -diffMat;  
+              zeros(nSeg, nTime), diffMat];
+bineq_vUpp = [-(vLow.*hSeg)';
+              (vUpp.*hSeg)'];
+          
+% Inequality constraint:
+Aineq = [Aineq_xLim; Aineq_vLow; Aineq_vUpp];
+bineq = [bineq_xLim; bineq_vLow; bineq_vUpp];
 
 % Set the smoothing term for the leaf blocking
 param.smooth.leafBlockingAlpha = getExpSmoothingParam(param.smooth.leafBlockingFrac, param.smooth.leafBlockingWidth);
@@ -74,8 +78,8 @@ problem.objective = @(z)( fluenceFittingObjective(z, dose, target, param) );
 problem.x0 = zGuess;
 problem.Aineq = Aineq;
 problem.bineq = bineq;
-problem.Aeq = Aeq;
-problem.beq = beq;
+problem.Aeq = [];
+problem.beq = [];
 problem.lb = zLow;
 problem.ub = zUpp;
 problem.nonlcon = [];
@@ -106,26 +110,22 @@ end
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 
-function [xLow, xUpp, vLow, vUpp] = unpackDecVars(z)
+function [xLow, xUpp] = unpackDecVars(z)
 
-nGrid = 1+(length(z)-2)/4;
-nSeg = nGrid - 1;
+nGrid = length(z)/2;
 idx = 1:nGrid;
 xLow = z(idx)';
 idx = idx(end) + (1:nGrid);
 xUpp = z(idx)';
-idx = idx(end) + (1:nSeg);
-vLow = z(idx)';
-idx = idx(end) + (1:nSeg);
-vUpp = z(idx)';
+
 
 end
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 
-function z = packDecVars(xLow, xUpp, vLow, vUpp)
+function z = packDecVars(xLow, xUpp)
 
-z = [xLow, xUpp, vLow, vUpp]';
+z = [xLow, xUpp]';
 
 end
 
@@ -147,7 +147,12 @@ function [obj, fGrid] = fluenceFittingObjective(zGuess, dose, target, param)
 %   param.nQuad = number of segments to use for quadrature
 %
 
-[xLow, xUpp, vLow, vUpp] = unpackDecVars(zGuess);
+[xLow, xUpp] = unpackDecVars(zGuess);
+
+tGrid = dose.tGrid;
+hSeg = diff(tGrid);
+vLow = diff(xLow)./hSeg;
+vUpp = diff(xUpp)./hSeg;
 
 alpha = param.smooth.leafBlockingAlpha;
 beta = param.smooth.velocityObjective;
