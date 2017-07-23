@@ -142,26 +142,7 @@ The inner optimization loop computes the leaf trajectories $z_L(t)$ and $z_U(t)$
 that minimize the objective function (\ref{eqn:FluenceFittingObjective})
 and satisfy the constraints (\ref{eqn:FirstTrajectoryConstraint}--\ref{eqn:LastTrajectoryConstraint}).
 
-Since we represent these trajectories as piecewise linear,
-it is natural to represent them by their values at the knot points $t_i$.
-The position trajectory is piecewise linear, thus it follows that we should represent the
-velocity trajectory as piecewise constant.
-Here we will use a direct collocation transcription method, where the velocity for the
-lower $v_L$ and upper $v_U$ leaves are decision variables.
-is a decision variable in the optimization,
-and we add a constraint to ensure that the velocity is the derivative of position.
-This is done to keep the gradients in the optimization sparse \cite{Betts2010}.
-We with our quadrature calculations, we will use trapezoidal quadrature for the integral constraint.
-We will define the segment duration $h_k = (t_{k+1} - t_k)$.
-
-\begin{align}
-  v_{L,k} & = \tfrac{1}{2} h_k \cdot  \big( z_{L, k} + z_{L, k+1} \big)
-  \quad \quad \forall k\\
-  v_{U,k} & = \tfrac{1}{2} h_k \cdot  \big( z_{U, k} + z_{U, k+1} \big)
-  \quad \quad \forall k\\
-\end{align}
-
-The limits on leaf position and velocity can be implemented as a combination of
+The limits on leaf position can be implemented as a combination of
 constant bounds and linear inequality constraints:
 
 \begin{equation}
@@ -174,11 +155,27 @@ constant bounds and linear inequality constraints:
   \forall k
 \end{equation}
 
+Since we represent these trajectories as piecewise linear,
+it is natural to represent them by their values at the knot points $t_i$.
+The position trajectory is piecewise linear,
+and we can compute the velocity trajectory by taking the derivative of the spline.
+The velocity between each pair of knot points will be constant and given by:
+
 \begin{equation}
-  v_\text{min} \leq v_{L,k} \leq v_\text{max}
+  \dot{z}_{L, k} = \frac{z_{L, k+1} - z_{L, k}}{h_k}
   \quad \quad
-  v_\text{min} \leq v_{U,k} \leq v_\text{max}
+  \dot{z}_{U, k} = \frac{z_{U, k+1} - z_{U, k}}{h_k}
+\end{equation}
+
+The limits on velocity can thus be written as linear inequality constraints:
+
+\begin{equation}
+  v_\text{min} \leq \dot{z}_{L, k} \leq v_\text{max}
+  \quad \quad
+  v_\text{min} \leq \dot{z}_{U, k} \leq v_\text{max}
   \quad \quad \forall k
 \end{equation}
+
+
 
 \todo{Add a summary sentence about how to pack everything up into a NLP solver}

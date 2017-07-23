@@ -161,19 +161,16 @@ nQuad = param.nQuad;
 fGrid = getFluence(target.xGrid, dose.tGrid, xLow, xUpp, dose.rGrid, alpha, nQuad);
 fErr = (fGrid - target.fGrid).^2;
 
-% Trapezoid rule:
-xLow = target.xGrid(1:(end-1));
-xUpp = target.xGrid(2:end);
-eLow = fErr(1:(end-1));
-eUpp = fErr(2:end);
-objFit = 0.5*sum((xUpp - xLow).*(eLow + eUpp));
+% Primary objective
+objFit = sum(fErr.*target.dx);
 
-% Rectangle rule:
+% Secondary objective:  (rectangle rule):
 tA = dose.tGrid(1:(end-1));
 tB = dose.tGrid(2:end);
 objVelLow = sum((tB - tA).*(vLow.^2));
 objVelUpp = sum((tB - tA).*(vUpp.^2));
 
+% Combine objective terms
 objSmooth = beta*(objVelLow + objVelUpp);
 
 obj = objFit + objSmooth;

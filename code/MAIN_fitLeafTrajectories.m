@@ -9,6 +9,8 @@ xBnd = [0, 2];
 vBnd = [0, 0.5];
 
 % parameters for the leaf trajectory fitting
+param.limits.time = tBnd;
+param.limits.position = xBnd;
 param.limits.velocity = vBnd;
 param.smooth.leafBlockingWidth = 0.05*diff(xBnd);
 param.smooth.leafBlockingFrac = 0.95;  % Change in smoothing over width
@@ -16,7 +18,7 @@ param.smooth.velocityObjective = 1e-3;
 param.nQuad = 20;  % Number of segments for quadrature calculations
 param.guess.defaultLeafSpaceFraction = 0.25;
 
-nKnot = 7;
+nKnot = 10;
 nFit = 5*nKnot;
 
 % parameters for fmincon:
@@ -35,8 +37,10 @@ fluenceProfile.tGrid = linspace(xBnd(1), xBnd(2), 6);
 fluenceProfile.fGrid = [0.1, 0.8, 1.8, 0.2, 0.6, 0.0];
 fluenceProfile.pp = pchip(fluenceProfile.tGrid, fluenceProfile.fGrid);
 xGrid = linspace(xBnd(1), xBnd(2), nFit+1);
-xGrid = 0.5*(xGrid(1:nFit) + xGrid(2:end));
-target.xGrid = xGrid;
+xMid = 0.5*(xGrid(1:nFit) + xGrid(2:end));
+dx = xGrid(2:end) - xGrid(1:nFit);
+target.xGrid = xMid;
+target.dx = dx;
 target.fGrid = ppval(fluenceProfile.pp, target.xGrid);
 
 % Random dose trajectory
@@ -70,7 +74,7 @@ h.YLim = [0, h.YLim(2)];
 subplot(2,2,1); hold on;
 plot(soln.target.fGrid, soln.target.xGrid,'rx')
 plot(fFluencePlot, xFluencePlot,'r-','LineWidth',1)
-plot(soln.target.fSoln, soln.target.xGrid,'k--o','LineWidth',2)
+plot(soln.target.fSoln, soln.target.xGrid,'ko','LineWidth',2)
 xlabel('time')
 ylabel('fluence dose')
 legend('Fitting Points','Fluence Target', 'Fluence Soln');
