@@ -34,7 +34,7 @@ end
 nTime = length(dose.tGrid);
 hSeg = diff(dose.tGrid);
 xLowGuess = interp1(guess.tGrid', guess.xLow', dose.tGrid')';
-xUppGuess = interp1(guess.tGrid', guess.xLow', dose.tGrid')';
+xUppGuess = interp1(guess.tGrid', guess.xUpp', dose.tGrid')';
 vLowGuess = diff(xLowGuess)./hSeg;
 vUppGuess = diff(xUppGuess)./hSeg;
 
@@ -45,7 +45,7 @@ vLow = vBnd(1)*ones(1, nTime-1);
 vUpp = vBnd(2)*ones(1, nTime-1);
 zLow = packDecVars(xLow, xLow, vLow, vLow);
 zUpp = packDecVars(xUpp, xUpp, vUpp, vUpp);
-zGuess = packDecVars(xUppGuess, xUppGuess, vLowGuess, vUppGuess);
+zGuess = packDecVars(xLowGuess, xUppGuess, vLowGuess, vUppGuess);
 
 % Constraint: xLow - xUpp <= 0
 Aineq = [diag(ones(nTime,1)), diag(-ones(nTime,1)), zeros(nTime, 2*nTime -2)];

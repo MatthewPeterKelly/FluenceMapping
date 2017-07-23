@@ -89,10 +89,11 @@ xlabel('time');
 ylabel('leaf position');
 legend('Leaf One','Leaf Two');
 
-subplot(2,2,4); hold on;
+h = subplot(2,2,4); hold on;
 plot(tGrid, soln.traj.dose, 'g-o');
 xlabel('time')
 ylabel('fluence dose')
+h.YLim = [0, h.YLim(2)];
 
 subplot(2,2,1); hold on;
 plot(soln.target.fGrid, soln.target.xGrid,'rx')

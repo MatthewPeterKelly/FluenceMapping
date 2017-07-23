@@ -5,8 +5,8 @@
 
 clc; clear;
 
-% fileName = 'sampleData/twodips.mat'; figNum = 1025;
-fileName = 'sampleData/twohumps.mat';  figNum = 1026;
+fileName = 'sampleData/twodips.mat'; figNum = 1025;
+% fileName = 'sampleData/twohumps.mat';  figNum = 1026;
 
 fluenceTargetData = load(fileName);
 
@@ -20,13 +20,13 @@ nGrid = 5;  % Number of grid points for trajectories
 % parameters for the leaf trajectory fitting
 param.limits.velocity = vBnd;
 param.smooth.leafBlockingWidth = 0.05*diff(xBnd);  % 0.01 = more precise, 0.1 = faster
-param.smooth.leafBlockingFrac = 0.95;  % Change in smoothing over width (0.99 = more precise, 0.9 = faster)
+param.smooth.leafBlockingFrac = 0.96;  % Change in smoothing over width (0.99 = more precise, 0.9 = faster)
 param.smooth.velocityObjective = 1e-6;   % 1e-6 = more precise, 1e-3 faster, smooth leaf traj
-param.nSubSample = 5;  % 10 = more precise, 2 = faster
+param.nQuad = 20;  % number of segments to use for quadrature. 50 = more precise, 10 = faster.
 param.guess.defaultLeafSpaceFraction = 0.2;
 
 % Parameters for dose trajectory fitting
-param.smooth.doseObjective = 1e-3;   % 1e-6 = more precise, 1e-2 smoother dose profile, faster
+param.smooth.doseObjective = 1e-6;   % 1e-6 = more precise, 1e-2 smoother dose profile, faster
 
 % parameters for fmincon:
 param.fmincon = optimset(...
@@ -60,7 +60,10 @@ options.DispModulo = 1;
 guess = [];
 
 % Sample the fluence map:
-target.xGrid = linspace(xBnd(1), xBnd(2), 20);  %sub-sample the data
+nFit = 5*nGrid;
+xGrid = linspace(xBnd(1), xBnd(2), nFit+1);
+xGrid = 0.5*(xGrid(1:nFit) + xGrid(2:end));
+target.xGrid = xGrid;
 target.fGrid = interp1(fluenceTargetData.sx', fluenceTargetData.sf', target.xGrid')';
 
 %% Call CMAES

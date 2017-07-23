@@ -27,7 +27,7 @@ These limits are detailed below, where $\dot{z}(t) = \tfrac{d}{dt}z(t)$ gives th
 \begin{align}
   \text{dose-rate: }& \quad 0 \leq r(t) \leq r_\text{max}
       \label{eqn:FirstTrajectoryConstraint}\\
-  \text{leaf position: }& \quad x_{min} \leq z_L(t) \leq z_U(t) \leq x_\text{max} \\
+  \text{leaf position: }& \quad x_\text{min} \leq z_L(t) \leq z_U(t) \leq x_\text{max} \\
   \text{lower leaf velocity: }& \quad v_\text{min} \leq \dot{z}_L(t) \leq v_\text{max} \\
   \text{upper leaf velocity: }& \quad v_\text{min} \leq \dot{z}_U(t) \leq v_\text{max}
       \label{eqn:LastTrajectoryConstraint}
@@ -86,7 +86,7 @@ This allows us to rewrite (\ref{eqn:fluenceMapIntegral}) using the constant boun
 
 Now we have a standard scalar integral, where the integrand is smooth and the
 bounds are constant, we can use any quadrature method to evaluate (\ref{eqn:fluenceDoseSimpleBounds}).
-In this case we use the trapezoid rule with a dense grid spacing.
+In this case we use the midpoint (rectangle) quadrature rule.
 
 \subsection{Modeling Fluence Blocking}
 \label{sec:modelingFluenceBlocking}
@@ -101,12 +101,15 @@ A smaller smoothing parameter will provide a more accurate model,
 while a larger smoothing parameter will lead to faster optimization.
 
 \begin{equation}
-  k(t, x) = s\big(x - z_L(t), \alpha\big) \; \cdot \; s\big(z_U(t) - z, \alpha\big)
+  k(t, x) = \sqrt{s\big(x - z_L(t), \, \alpha\big) \; \cdot \; s\big(z_U(t) - z, \, \alpha\big)}
 \end{equation}
 
 \begin{equation}
   s(t, \alpha) = \frac{1}{1 + e^{-t/\alpha}}
 \end{equation}
+
+The smoothing parameter $\alpha$ is computed such that $95\%$ of the smoothing occurs over a
+distance of $0.05 \cdot (x_\text{max} - x_\text{max})$.
 
 \subsection{Objective Function}
 
@@ -116,7 +119,7 @@ The fluence fitting objective is the integral of the squared-error
 between the target fluence $f_T(x)$ and the delivered fluence $f_D(x)$.
 
 \begin{equation}
-  J_\text{fit} = \int_{x_{min}}^{x_{max}} \! \big( f_T(x) - f_D(x) \big)^2 \,dx
+  J_\text{fit} = \int_{x_\text{min}}^{x_\text{max}} \! \big( f_T(x) - f_D(x) \big)^2 \,dx
 \end{equation}
 
 Like the other integrals, we evaluate this integral using the trapezoid rule,
@@ -128,18 +131,18 @@ Since the fitting objective is an integral over position, and the smoothing obje
 is computed over time, we normalize both before combining.
 
 \begin{equation}
-  J = \frac{1}{(x_{max} - x_{min})} J_\text{fit}
+  J = \frac{1}{(x_\text{max} - x_\text{min})} J_\text{fit}
     + \frac{\beta}{T} J_\text{vel}
 \label{eqn:FluenceFittingObjective}
 \end{equation}
 
 \subsection{Transcription to a Nonlinear Program}
 
-The inner optimization loop computes the leaf trajectories ($z_L(t), z_U(t)$)
+The inner optimization loop computes the leaf trajectories $z_L(t)$ and $z_U(t)$
 that minimize the objective function (\ref{eqn:FluenceFittingObjective})
 and satisfy the constraints (\ref{eqn:FirstTrajectoryConstraint}--\ref{eqn:LastTrajectoryConstraint}).
 
-Since we represent the position trajectories $z_L(t)$ and $z_U(t)$ as piecewise linear,
+Since we represent these trajectories as piecewise linear,
 it is natural to represent them by their values at the knot points $t_i$.
 The position trajectory is piecewise linear, thus it follows that we should represent the
 velocity trajectory as piecewise constant.
@@ -147,7 +150,7 @@ Here we will use a direct collocation transcription method, where the velocity f
 lower $v_L$ and upper $v_U$ leaves are decision variables.
 is a decision variable in the optimization,
 and we add a constraint to ensure that the velocity is the derivative of position.
-This is done to keep the gradients in the optimization sparse \ref{Betts2010}.
+This is done to keep the gradients in the optimization sparse \cite{Betts2010}.
 We with our quadrature calculations, we will use trapezoidal quadrature for the integral constraint.
 We will define the segment duration $h_k = (t_{k+1} - t_k)$.
 

@@ -12,33 +12,40 @@ vBnd = [0, 0.5];
 param.limits.velocity = vBnd;
 param.smooth.leafBlockingWidth = 0.05*diff(xBnd);
 param.smooth.leafBlockingFrac = 0.95;  % Change in smoothing over width
-param.smooth.velocityObjective = 1e-2;
+param.smooth.velocityObjective = 1e-3;
 param.nQuad = 20;  % Number of segments for quadrature calculations
 param.guess.defaultLeafSpaceFraction = 0.25;
+
+nKnot = 7;
+nFit = 5*nKnot;
 
 % parameters for fmincon:
 param.fmincon = optimset(...
     'Display', 'iter');
 
-% Random dose trajectory
-nGrid = 4;
-dose.tGrid = linspace(tBnd(1), tBnd(2), nGrid);
-dose.rGrid = 3*rand(1, nGrid);
+% Arbitrary dose trajectory for testing:
+doseProfile.tGrid = linspace(tBnd(1), tBnd(2), 5);
+doseProfile.fGrid = [1, 1.8, 2.5, 1.8, 1.9];
+doseProfile.pp = pchip(doseProfile.tGrid, doseProfile.fGrid);
+dose.tGrid = linspace(tBnd(1), tBnd(2), nKnot);
+dose.rGrid = ppval(doseProfile.pp, dose.tGrid);
 
+% Arbitrary fluence target for testing:
+fluenceProfile.tGrid = linspace(xBnd(1), xBnd(2), 6);
+fluenceProfile.fGrid = [0.1, 0.8, 1.8, 0.2, 0.6, 0.0];
+fluenceProfile.pp = pchip(fluenceProfile.tGrid, fluenceProfile.fGrid);
+xGrid = linspace(xBnd(1), xBnd(2), nFit+1);
+xGrid = 0.5*(xGrid(1:nFit) + xGrid(2:end));
+target.xGrid = xGrid;
+target.fGrid = ppval(fluenceProfile.pp, target.xGrid);
+
+% Random dose trajectory
 % Use the default initialization for now
 guess = [];
 
-% Create a smooth test fluence map:
-nModel = 5;
-xFluence = linspace(xBnd(1), xBnd(2), nModel);
-fFluence = 4*rand(1,nModel); fFluence([1,end]) = 0;
-nFluenceGrid = 25;
-target.xGrid = linspace(xBnd(1), xBnd(2), nFluenceGrid);
-target.fGrid = pchip(xFluence',fFluence',target.xGrid')';
-
 % sample the fluence profile densely for plotting:
 xFluencePlot = linspace(xBnd(1), xBnd(2), 100);
-fFluencePlot = pchip(xFluence',fFluence',xFluencePlot')';
+fFluencePlot = ppval(fluenceProfile.pp, xFluencePlot);
 
 % Solve!
 soln = fitLeafTrajectories(dose, guess, target, param);
