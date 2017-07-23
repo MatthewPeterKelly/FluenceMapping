@@ -15,9 +15,10 @@ rBnd = [0, 4]; % bounds on dose rate
 
 % parameters for the leaf trajectory fitting
 param.limits.velocity = vBnd;
-param.smooth.leafBlocking = 400/diff(xBnd);
+param.smooth.leafBlockingWidth = 0.05*diff(xBnd);
+param.smooth.leafBlockingFrac = 0.95;  % Change in smoothing over width
 param.smooth.velocityObjective = 1e-5;
-param.nSubSample = 5;
+param.nQuad = 20;
 param.guess.defaultLeafSpaceFraction = 0.2;
 
 % Parameters for dose trajectory fitting

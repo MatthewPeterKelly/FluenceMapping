@@ -12,16 +12,15 @@ function soln = fitLeafTrajectories(dose, guess, target, param)
 %   target.xGrid = [1, nFit] = time grid for fitting function
 %   target.fGrid = [1, nFit] = fluence at each grid point
 %   param.limits.velocity = [low, upp] = lower and upper limits on velocity
-%   param.smooth.leafBlocking = smoothing parameter for leaf-blocking model
+%   param.smooth.leafBlockingWidth = width over which smoothing occurs
+%   param.smooth.leafBlockingFrac = total change over width (eg. 0.98)
 %   param.smooth.velocityObjective = velocity-squared objective weight
-%   param.nSubSample = number of sub-samples to use for quadrature
+%   param.nQuad = number of sub-samples to use for quadrature
 %   param.guess.defaultLeafSpaceFraction = 0.25;
 %   param.fmincon = optimset('fmincon') = options to pass to fmincon
 
 xBnd = [min(target.xGrid), max(target.xGrid)];
 vBnd = param.limits.velocity;
-nSub = param.nSubSample; % number of sub-segments between each point in tGrid
-tGridQuad = subSampleGrid(dose.tGrid, nSub);
 
 % Use default guess if empy
 if isempty(guess)
@@ -65,8 +64,13 @@ for i = 1:nSeg
     Aeq(nSeg + i,2*nTime + nTime-1 + i) = hSeg(i);  % h(i)*vLow(i)
 end
 
+% Set the smoothing term for the leaf blocking
+param.smooth.leafBlockingAlpha = getExpSmoothingParam(param.smooth.leafBlockingFrac, param.smooth.leafBlockingWidth);
+alpha = param.smooth.leafBlockingAlpha;
+nQuad = param.nQuad;
+
 % Set up for fmincon:
-problem.objective = @(z)( fluenceFittingObjective(z, dose, target, param, tGridQuad) );
+problem.objective = @(z)( fluenceFittingObjective(z, dose, target, param) );
 problem.x0 = zGuess;
 problem.Aineq = Aineq;
 problem.bineq = bineq;
@@ -83,8 +87,7 @@ startTime = tic;
 [zSoln, fSoln, exitFlag] = fmincon(problem);
 nlpTime = toc(startTime);
 [xLow, xUpp] = unpackDecVars(zSoln);
-gamma = param.smooth.leafBlocking;
-target.fSoln = getFluence(target.xGrid, dose.tGrid, xLow, xUpp, dose.rGrid, gamma, tGridQuad);
+target.fSoln = getFluence(target.xGrid, dose.tGrid, xLow, xUpp, dose.rGrid, alpha, nQuad);
 
 % pack up solution:
 soln.traj.xLow = xLow;
@@ -128,8 +131,8 @@ end
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 
-function [obj, fGrid] = fluenceFittingObjective(zGuess, dose, target, param, tGridQuad)
-% [obj, fGrid] = fluenceFittingObjective(zGuess, dose, target, param, tGridQuad)
+function [obj, fGrid] = fluenceFittingObjective(zGuess, dose, target, param)
+% [obj, fGrid] = fluenceFittingObjective(zGuess, dose, target, param)
 %
 % Compute the mean-squared error for the fluence produced by the inputs
 %
@@ -139,18 +142,18 @@ function [obj, fGrid] = fluenceFittingObjective(zGuess, dose, target, param, tGr
 %   target.xGrid = [1, nFit] = time grid for fitting function
 %   target.fGrid = [1, nFit] = fluence at each grid point
 %   param.limits.velocity = [low, upp] = lower and upper limits on velocity
-%   param.smooth.leafBlocking = smoothing parameter for leaf-blocking model
+%   param.smooth.leafBlockingAlpha = smoothing parameter for leaf-blocking model
 %   param.smooth.velocityObjective = velocity-squared objective weight
-%   param.nSubSample = number of sub-samples to use for quadrature
-%   tGridQuad = time grid for quadrature
+%   param.nQuad = number of segments to use for quadrature
 %
 
 [xLow, xUpp, vLow, vUpp] = unpackDecVars(zGuess);
 
-gamma = param.smooth.leafBlocking;
+alpha = param.smooth.leafBlockingAlpha;
 beta = param.smooth.velocityObjective;
+nQuad = param.nQuad;
 
-fGrid = getFluence(target.xGrid, dose.tGrid, xLow, xUpp, dose.rGrid, gamma, tGridQuad);
+fGrid = getFluence(target.xGrid, dose.tGrid, xLow, xUpp, dose.rGrid, alpha, nQuad);
 fErr = (fGrid - target.fGrid).^2;
 
 % Trapezoid rule:

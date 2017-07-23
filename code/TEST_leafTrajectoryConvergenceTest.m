@@ -1,6 +1,11 @@
-% This script creates a sample fluence-fitting problem, generates a random
-% dose-rate trajectory, and then computes the leaf-trajectories that
-% do the best job of fitting those trajectories.
+% MAIN_leafTrajectoryConvergenceTest
+%
+% This script performs 3 grid sweeps:
+% 1) leaf blocking smoothing
+% 2) velocity smoothing
+% 3) number of grid points in spline
+%
+%
 
 clc; clear;
 
@@ -8,12 +13,13 @@ tBnd = [0, 5];
 xBnd = [0, 2];
 vBnd = [0, 0.5];
 
+smoothList.leafBlocking = (200/diff(xBnd))*logspace(-2
+
 % parameters for the leaf trajectory fitting
 param.limits.velocity = vBnd;
-param.smooth.leafBlockingWidth = 0.05*diff(xBnd);
-param.smooth.leafBlockingFrac = 0.95;  % Change in smoothing over width
+param.smooth.leafBlocking = 500/diff(xBnd);
 param.smooth.velocityObjective = 1e-2;
-param.nQuad = 20;  % Number of segments for quadrature calculations
+param.nSubSample = 10;
 param.guess.defaultLeafSpaceFraction = 0.25;
 
 % parameters for fmincon:
@@ -21,7 +27,7 @@ param.fmincon = optimset(...
     'Display', 'iter');
 
 % Random dose trajectory
-nGrid = 4;
+nGrid = 8;
 dose.tGrid = linspace(tBnd(1), tBnd(2), nGrid);
 dose.rGrid = 3*rand(1, nGrid);
 
@@ -54,11 +60,10 @@ xlabel('time');
 ylabel('leaf position');
 legend('Leaf One','Leaf Two');
 
-h = subplot(2,2,4); hold on;
+subplot(2,2,4); hold on;
 plot(tGrid, soln.traj.dose, 'g-o');
 xlabel('time')
 ylabel('fluence dose')
-h.YLim = [0, h.YLim(2)];
 
 subplot(2,2,1); hold on;
 plot(soln.target.fGrid, soln.target.xGrid,'rx')
