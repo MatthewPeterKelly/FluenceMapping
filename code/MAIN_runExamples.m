@@ -103,17 +103,17 @@ xlabel('fluence dose')
 ylabel('position')
 legend('Fitting Points','Fluence Target', 'Fluence Soln');
 
-h = subplot(2,2,3); hold on;
-axis off;
-h.XLim = [0,1];
-h.YLim = [0,1];
-dataString = {...
-    ['ObjVal: ' num2str(soln.obj)];
-    ['NLP Time: ' num2str(soln.nlpTime)];
-    ['countEval: ' num2str(countEval)];
-    ['bestEver.f: ' num2str(bestEver.f)];
-    };
-text(0.05, 0.5, dataString, ...
-    'FontSize',14)
+% h = subplot(2,2,3); hold on;
+% axis off;
+% h.XLim = [0,1];
+% h.YLim = [0,1];
+% dataString = {...
+%     ['ObjVal: ' num2str(soln.obj)];
+%     ['NLP Time: ' num2str(soln.nlpTime)];
+%     ['countEval: ' num2str(countEval)];
+%     ['bestEver.f: ' num2str(bestEver.f)];
+%     };
+% text(0.05, 0.5, dataString, ...
+%     'FontSize',14)
 
 
