@@ -26,3 +26,33 @@ Why use a linear spline instead of a single polynomial?
 \end{itemize}
 
 In practice, the version of the code with linear splines seems to reliably converge to good leaf trajectories (given an arbitrary dose rate profile). Adding more grid points refines the accuracy of the solution, and the regularization term seems to do a good job of avoiding local minima. We can discuss more over the phone as well. I think that it would be good for me to get a better understanding of how the existing methods work, so that I can compare and contrast them with this method.
+
+\subsection{Inner Optimization:  Leaf Trajectories}
+
+The inner optimization now seems to be working reliably.
+It generally takes 0.1 - 1.0 seconds to solve the optimization, depending on the users choice of parameters.
+
+For most reasonable dose profiles the optimization is able to find a set of leaf trajectories
+that produce a reasonable approximation of the target fluence map.
+
+I did a few rough convergence studies and the solution appears to be stable with respect to changes
+in the number of trajectory segments and smoothing parameters.
+This suggests that the inner optimization is able to avoid local minima.
+
+\todo{More formal discussion of the convergence study with plots.}
+
+
+\subsection{Outer Optimization:  Dose-Rate Trajectories}
+
+The outer optimization with CMAES works, but it still has the problem with local minima:
+running the optimization N times produces several different solutions.
+These solutions all have similar objective function values, but are created by different
+dose-rate trajectories.
+
+If I make the smoothing term on the dose-rate trajectory large, then I get repeatable solutions,
+but they tend to be nearly-constant dose rate, and often relatively high.
+
+Another option would be to use a regularization term that forces a low value of the dose rate,
+which is perhaps desirable in the real system.
+
+\todo{finish this up}

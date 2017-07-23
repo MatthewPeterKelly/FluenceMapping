@@ -23,7 +23,8 @@ nFit = 5*nKnot;
 
 % parameters for fmincon:
 param.fmincon = optimset(...
-    'Display', 'iter');
+    'Display', 'iter',...
+    'TolFun', 1e-3);
 
 % Arbitrary dose trajectory for testing:
 doseProfile.tGrid = linspace(tBnd(1), tBnd(2), 5);

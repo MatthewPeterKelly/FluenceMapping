@@ -1,4 +1,4 @@
-\section{Method}
+\section{Method - Inner Optimization - Leaf Trajectories}
 
 
 \subsection{Trajectory Representation}
@@ -114,7 +114,7 @@ distance of $0.05 \cdot (x_\text{max} - x_\text{max})$.
 \subsection{Objective Function}
 
 The objective function for the inner optimization (computing leaf trajectories)
-is a weighted combination between the fitting error and the smoothing regularizaiton.
+is a weighted combination between the fitting error and the smoothing regularization.
 The fluence fitting objective is the integral of the squared-error
 between the target fluence $f_T(x)$ and the delivered fluence $f_D(x)$.
 
@@ -122,8 +122,7 @@ between the target fluence $f_T(x)$ and the delivered fluence $f_D(x)$.
   J_\text{fit} = \int_{x_\text{min}}^{x_\text{max}} \! \big( f_T(x) - f_D(x) \big)^2 \,dx
 \end{equation}
 
-Like the other integrals, we evaluate this integral using the trapezoid rule,
-although the specific choice of quadrature method is not important.
+Like the other integrals, we evaluate this integral using the rectangle rule.
 
 The final objective function is a weighted combination of the
 fitting objective $J_\text{fit}$ and the smoothing objective $J_\text{vel}$.
@@ -176,6 +175,25 @@ The limits on velocity can thus be written as linear inequality constraints:
   \quad \quad \forall k
 \end{equation}
 
-
-
 \todo{Add a summary sentence about how to pack everything up into a NLP solver}
+
+
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+
+
+
+\section{Method - Outer Optimization - Dose Rate Trajectories}
+
+\todo{Write this section.}
+
+\subsection{Objective Function:}
+
+Balance between fitting term and change in dose rate term.
+
+\todo{Finish writing}
+
+\subsection{Optimization:}
+
+CMAES
+\todo{Finish writing}

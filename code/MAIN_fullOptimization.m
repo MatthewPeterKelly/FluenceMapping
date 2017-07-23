@@ -62,8 +62,10 @@ guess = [];
 nFluenceModel = 5;
 xFluence = linspace(xBnd(1), xBnd(2), nFluenceModel);
 fFluence = rand(1,nFluenceModel); fFluence([1,end]) = 0;
-nFluenceGrid = 25;
-target.xGrid = linspace(xBnd(1), xBnd(2), nFluenceGrid);
+nFit = 5*nGrid;
+xGrid = linspace(xBnd(1), xBnd(2), nFit+1);
+target.xGrid = 0.5*(xGrid(2:end) + xGrid(1:nFit));
+target.dx = xGrid(2:end) - xGrid(1:nFit);
 target.fGrid = pchip(xFluence',fFluence',target.xGrid')';
 
 % sample the fluence profile densely for plotting:
@@ -92,7 +94,7 @@ legend('Leaf One','Leaf Two');
 h = subplot(2,2,4); hold on;
 plot(tGrid, soln.traj.dose, 'g-o');
 xlabel('time')
-ylabel('fluence dose')
+ylabel('dose rate')
 h.YLim = [0, h.YLim(2)];
 
 subplot(2,2,1); hold on;
