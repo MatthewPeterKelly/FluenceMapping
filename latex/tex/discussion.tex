@@ -49,10 +49,20 @@ running the optimization N times produces several different solutions.
 These solutions all have similar objective function values, but are created by different
 dose-rate trajectories.
 
+It seems to me that the dose-rate optimization has a large number of similar-valued minima,
+since the leaf-trajectory optimization can find good solutions for most dose-rate trajectories.
+The residual fitting error seems to be more related to the choice of discretization -- number of
+grid segments, rather than convergence failure.
+
+I see two ways to go forward from here. First would be to try this optimization with a set of
+leaf trajectories, to see if that helps force a better global solution, since the problem will
+be more constrained. Second would be to play around more with global optimization and smoothing
+terms.
+
 If I make the smoothing term on the dose-rate trajectory large, then I get repeatable solutions,
 but they tend to be nearly-constant dose rate, and often relatively high.
 
-Another option would be to use a regularization term that forces a low value of the dose rate,
-which is perhaps desirable in the real system.
+Another option would be to modify the regularization term to include a  penalty on large
+dose rates, which is perhaps desirable in the real system.
 
 \todo{finish this up}
