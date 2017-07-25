@@ -10,11 +10,14 @@ if soln.exitFlag == 1  % Optimization succeeded
     
     fitObj = soln.obj;
     
+    % Rate-squared smoothing term
     tLow = dose.tGrid(1:(end-1));
     tUpp = dose.tGrid(2:end);
     rLow = dose.rGrid(1:(end-1));
     rUpp = dose.rGrid(2:end);
-    doseObj = sum(0.5*(tUpp - tLow).*(rLow + rUpp));
+    hSeg = (tUpp - tLow);
+    vel = (rUpp - rLow)./hSeg;
+    doseObj = sum(hSeg.*vel.^2);
     
     gamma = param.smooth.doseObjective;
     objVal = fitObj + gamma*doseObj;

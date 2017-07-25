@@ -1,0 +1,52 @@
+\section{Introduction}
+The optimal dynamic delivery of a given fluence map remains a difficult,
+largely unsolved problem, due to its inherent nonconvexity.
+The nonconvexity of the fluence map matching problem leads to a large number of local minima.
+Many methods simply ignore this crucial aspect of the problem,
+and others use a multi-start procedure to find several local minima and return the best one found.
+For a thorough introduction to the complexities of dynamic fluence map delivery
+(which generally arises in the context of volumetric modulated arc therapy, VMAT),
+see \cite{balvertcraft} and \cite{unkvmatreview}.
+
+In this technical note, we investigate a regularization procedure which represents
+leaf trajectories and dose rates as linear splines (piece-wise linear functions),
+such that the optimization procedure naturally focuses on global aspects of the leaf trajectory/dose rate solution.
+
+\subsection{Fluence Mapping as Continuous Optimization}
+
+Our goal is to compute the optimal leaf trajectories $x_L(t)$ and $x_U(t)$,
+as well as the optimal dose rate $r(t)$ of the radiation source.
+For this initial study we will consider only a single leaf pair,
+although our algorithm is structured such that it could be applied to an arbitrary number of leaf pairs.
+We will assume that adjacent leaves are independent of each other,
+neglecting the small coupling terms created by the tongue-and-groove mechanism on the real machine.
+
+We will assume that the desired fluence dose at each point $q(x)$ on the subject is given.
+The optimization is given below, where $q'(x)$ is the fluence dose that is delivered by the
+dose rate and leaf trajectories and $X$ is the position domain of the fluence map.
+
+\begin{equation}
+\underset{r(t), \, x_L(t), \, x_U(t)}{\operatorname{argmin}}
+\int_X \bigg(q'(x)) - q(x)\bigg)^2 dx
+\label{eqn:fluenceMapOptimization}
+\end{equation}
+
+The fluence dose at each location can be computed as
+
+\begin{equation}
+q'(x) = \int_{T(x)} r(t) dt
+\label{eqn:deliveredFluenceDose}
+\end{equation}
+
+where $T(x)$ is the set of times when the position $x$ is not blocked by the leaves:
+$T(x)$ is the set of all times $t$ such that $ x_L(t) < x < x_U(t)$.
+
+For this work we will leave the initial and final leaf positions as decision variables
+in the optimization, but it is a trivial extension to enforce arbitrary initial and final
+leaf positions with a simple modification to the position limits at these points in the
+trajectory. This might be useful when combining a sequence of fluence maps as shown in
+\addref{Multi-VMAT paper}.
+
+% $x_L(0) = x_U(0)$ and
+% $x_L(T) = x_U(T)$ where
+% $t \in [0, T]$.
