@@ -6,19 +6,19 @@ clc; clear;
 
 tBnd = [0, 5];
 xBnd = [0, 2];
-vBnd = [0, 0.5];
+vBnd = 0.5*[-1, 1];
 
 % parameters for the leaf trajectory fitting
 param.limits.time = tBnd;
 param.limits.position = xBnd;
 param.limits.velocity = vBnd;
-param.smooth.leafBlockingWidth = 0.05*diff(xBnd);
+param.smooth.leafBlockingWidth = 0.02*diff(xBnd);
 param.smooth.leafBlockingFrac = 0.95;  % Change in smoothing over width
-param.smooth.velocityObjective = 1e-3;
+param.smooth.velocityObjective = 1e-4;
 param.nQuad = 20;  % Number of segments for quadrature calculations
-param.guess.defaultLeafSpaceFraction = 0.25;
+param.guess.defaultLeafSpaceFraction = 0.2;
 
-nKnot = 10;
+nKnot = 8;
 nFit = 5*nKnot;
 
 % parameters for fmincon:
@@ -28,7 +28,10 @@ param.fmincon = optimset(...
 
 % Arbitrary dose trajectory for testing:
 doseProfile.tGrid = linspace(tBnd(1), tBnd(2), 5);
-doseProfile.fGrid = [1, 1.8, 2.5, 1.8, 1.9];
+doseProfile.fGrid = 1.0*[1, 1.8, 2.5, 1.8, 1.9];
+
+% doseProfile.fGrid = 0.5*ones(size(doseProfile.tGrid));
+
 doseProfile.pp = pchip(doseProfile.tGrid, doseProfile.fGrid);
 dose.tGrid = linspace(tBnd(1), tBnd(2), nKnot);
 dose.rGrid = ppval(doseProfile.pp, dose.tGrid);

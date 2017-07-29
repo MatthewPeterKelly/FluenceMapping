@@ -19,7 +19,7 @@ function soln = fitLeafTrajectories(dose, guess, target, param)
 %   param.guess.defaultLeafSpaceFraction = 0.25;
 %   param.fmincon = optimset('fmincon') = options to pass to fmincon
 
-xBnd = [min(target.xGrid), max(target.xGrid)];
+xBnd = param.limits.position;
 vBnd = param.limits.velocity;
 
 % Use default guess if empy
@@ -103,6 +103,7 @@ soln.problem = problem;
 soln.traj.time = dose.tGrid;
 soln.traj.dose = dose.rGrid;
 soln.guess = guess;
+soln.dose = dose;
 soln.target = target;
 soln.param = param;
 
