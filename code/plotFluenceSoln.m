@@ -19,12 +19,12 @@ h.YLim = [0, h.YLim(2)];
 
 subplot(2,2,1); hold on;
 plot(soln.target.fGrid, soln.target.xGrid,'rx')
-plot(soln.target.dense.f, soln.target.dense.x, 'r-','LineWidth',1)
+plot(soln.param.fluenceTargetDense.f, soln.param.fluenceTargetDense.x, 'r-','LineWidth',1)
 plot(soln.target.fSoln, soln.target.xGrid,'ko','LineWidth',2)
-plot(soln.target.fluence, soln.target.xGrid,'kx','LineWidth',2)
+plot(soln.benchmark.fGrid, soln.benchmark.xGrid,'k-','LineWidth',2)
 ylabel('leaf position (cm)')
 xlabel('fluence dose (MU)')
-legend('Fitting Points','Fluence Target', 'Fluence Soln', 'Fluence Exact',...
+legend('Fitting Points','Fluence Target', 'Smooth Fluence', 'Exact Fluence',...
        'Location','SouthEast');
 
 

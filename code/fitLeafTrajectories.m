@@ -106,6 +106,7 @@ soln.guess = guess;
 soln.dose = dose;
 soln.target = target;
 soln.param = param;
+soln.benchmark = [];
 
 end
 

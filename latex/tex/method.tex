@@ -39,17 +39,21 @@ One of the key issues with fluence mapping is that the
 optimization tends to get stuck in local minima,
 since there are a large number of leaf trajectories that deliver the same fluence to the target.
 \addref{local minima in fluence mapping}
-Of these many solutions, the most desirable solutions are those which have smooth leaf trajectories,
-because they reduce wear on the machine and less likely to exploit inaccuracies in the model.
-\MPKcomment{Need some reference here, or perhaps a better explanation of why smooth is good.}
-One way to create a smooth trajectory is to minimize the integral of the derivative-squared,
-a regularization trick that is commonly used in trajectory optimization of dynamical systems.
-\addref{torque-squared optimization}
-For our problem, this regularization term can be written:
-\begin{equation}
-  J_\text{vel}\big(\dot{z}_L(t), \dot{z}_U(t)\big)
-    = \int_0^T \! \big( \dot{z}_L^2(t) + \dot{z}_U^2(t) \big) \,dt
-\end{equation}
+
+It is possible to help the optimization avoid local minima by smoothing the optimization problem.
+This smoothing is useful because it means that the gradient estimates in the optimization change less
+between each iteration in the optimization.
+
+There is an obvious trade-off here: smoothing makes the optimization easier by fundamentally changing the problem statement,
+thus we get an easy optimization that is inaccurate.
+The solution here is to iteratively reduce the smoothing terms,
+initially solving the optimization with heavy smoothing to avoid local minima,
+and then using that solution to initialize another optimization with less smoothing.
+See \S Section \ref{sec:modelingFluenceBlocking} for details.
+
+This technique of iteratively reducing a smoothing term is widely used in trajectory optimization,
+such is in \cite{Srinivasan2006}.
+
 
 \subsection{Computing Delivered Fluence}
 
@@ -66,13 +70,18 @@ dose-rate function over the periods of time when the leaves are not blocking the
   z_L(t) \leq x \leq z_U(t)
   \label{eqn:fluenceMapIntegral}
 \end{equation}
-\MPKcomment{Is there a better way to write the definition of $\mathcal{T}$?}
 
-It is tricky to compute this integral directly, as it would require computing
-the inverse of the leaf trajectories.
-In addition, it creates a discontinuity in the gradient
+There are two issues with computing this integral directory.
+The first is that it requires either computing the inverse of the leaf trajectories,
+which ultimately reduces to a non-linear root finding sub-problem.
+When placed inside of an optimization, this will dramatically slow convergence.
+The second issue is that the set $\mathcal{T}(x)$ does not smoothly vary with respect to the leaf trajectories.
+It is possible to construct a set of leaf trajectories for which a small change in leaf position
+switches $\mathcal{T}(x)$ from one to two simply connected sets.
+Inside of an optimization, this would cause a change in the sparsity pattern of the gradient
 (\textit{e.g.} $\tfrac{\partial f_D}{\partial z_L})$)
-which can cause issues when putting this integral inside of an objective function.
+between successive iterations,
+which leads to poor convergence and possibly a numerical instability.
 
 Our solution is to rewrite the integral using a blocking function $k(t)$,
 which has a value of one when the leaves are passing radiation and
@@ -108,31 +117,35 @@ while a larger smoothing parameter will lead to faster optimization.
   s(t, \alpha) = \frac{1}{1 + e^{-t/\alpha}}
 \end{equation}
 
-The smoothing parameter $\alpha$ is computed such that $95\%$ of the smoothing occurs over a
-distance of $0.05 \cdot (x_\text{max} - x_\text{max})$.
+In practice it is useful to define the smoothing parameter $\alpha$ in terms of a smoothing distance ($\gamma$)
+and the fraction change ($\Delta s$) in smoothing over this distance.
+
+There is a physical interpretation of the smoothing distance $\gamma$ for the leaf-blocking model:
+it is the distance, centered on the edge of the leaf, where the edge is blurred by the smoothing.
+
+\begin{equation}
+  \alpha = \frac{2}{\Delta s} \ln \left( \frac{1}{2} (1 - \gamma) \right)
+\end{equation}
+
 
 \subsection{Objective Function}
 
 The objective function for the inner optimization (computing leaf trajectories)
-is a weighted combination between the fitting error and the smoothing regularization.
-The fluence fitting objective is the integral of the squared-error
-between the target fluence $f_T(x)$ and the delivered fluence $f_D(x)$.
-
+is the integral of the error-squared between the target fluence $f_T(x)$ and the delivered fluence $f_D(x)$.
 \begin{equation}
-  J_\text{fit} = \int_{x_\text{min}}^{x_\text{max}} \! \big( f_T(x) - f_D(x) \big)^2 \,dx
+  J = \int_{x_\text{min}}^{x_\text{max}} \! \big( f_T(x) - f_D(x) \big)^2 \,dx
+  \label{eqn:continuousFittingObjective}
 \end{equation}
 
-Like the other integrals, we evaluate this integral using the rectangle rule.
-
-The final objective function is a weighted combination of the
-fitting objective $J_\text{fit}$ and the smoothing objective $J_\text{vel}$.
-Since the fitting objective is an integral over position, and the smoothing objective
-is computed over time, we normalize both before combining.
+In practice we can only compute the fluence profile at a finite number of points.
+We will break the domain $[x_\text{min}, x_\text{max}]$ into $N_\text{fit}$ equal-width segments,
+and evaluate the fluence target and delivered fluence at the midpoint $x_k$ of each segment.
+This is equivalent to approximating (\ref{eqn:continuousFittingObjective}) using rectangle (mid-point)
+quadrature with $N_\text{fit}$ segments.
 
 \begin{equation}
-  J = \frac{1}{(x_\text{max} - x_\text{min})} J_\text{fit}
-    + \frac{\beta}{T} J_\text{vel}
-\label{eqn:FluenceFittingObjective}
+  J \approx \frac{x_\text{max} - x_\text{min}}{N_\text{fit}}\sum_{k = 1}^{N_\text{fit}} \! \big( f_T(x_k) - f_D(x_k) \big)^2
+  \label{eqn:discreteFittingObjective}
 \end{equation}
 
 \subsection{Transcription to a Nonlinear Program}
@@ -178,9 +191,7 @@ The limits on velocity can thus be written as linear inequality constraints:
 \todo{Add a summary sentence about how to pack everything up into a NLP solver}
 
 
-
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
-
 
 
 \section{Method - Outer Optimization - Dose Rate Trajectories}

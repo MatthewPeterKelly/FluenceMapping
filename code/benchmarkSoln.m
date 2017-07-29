@@ -7,19 +7,28 @@ function soln = benchmarkSoln(soln)
 %
 %
 
+% Exact fluence delivered
 blockingFrac = 0.999;
 blockingWidth = 0.0001;
 alpha = getExpSmoothingParam(blockingFrac, blockingWidth);
-nQuad = 250;
-
-% Exact fluence delivered
-soln.target.fluence = getFluence(soln.target.xGrid, soln.dose.tGrid, ...
-    soln.traj.xLow, soln.traj.xUpp, soln.dose.rGrid, alpha, nQuad);
+nQuad = 500;
+soln.benchmark.xGrid = soln.param.fluenceTargetDense.x;
+soln.benchmark.fGrid = getFluence(soln.benchmark.xGrid, ...
+    soln.dose.tGrid, soln.traj.xLow, soln.traj.xUpp, soln.dose.rGrid,...
+    alpha, nQuad);
 
 % Exact fitting error
-fErr = (soln.target.fluence - soln.target.fGrid).^2;
+soln.benchmark.errGrid = (soln.benchmark.fGrid - soln.param.fluenceTargetDense.f).^2;
 
 % Primary objective
-soln.target.fitErr = sum(fErr.*soln.target.dx);
+soln.benchmark.fitErr = trapz(soln.param.fluenceTargetDense.x, soln.benchmark.errGrid);
+soln.benchmark.fitErrNormalized = soln.benchmark.fitErr/soln.param.fluenceTargetDense.peakFitErr;
+
+% Smooth fluence delivered:
+fErr = (soln.target.fGrid - soln.target.fSoln).^2;
+
+% Primary objective
+soln.benchmark.objFunFit = sum(fErr .* soln.target.dx);
+soln.benchmark.objFunFitNormalized = soln.benchmark.objFunFit / soln.param.fluenceTargetDense.peakFitErr;
 
 end

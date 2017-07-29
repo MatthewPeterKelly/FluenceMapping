@@ -7,7 +7,7 @@
   match for the target fluence map.
   Computing the dose-rate and leaf trajectories is a difficult optimization problem
   with many local minima.
-  In our optimization we add a regularization term to bias the search towards smooth trajectories,
+  In our optimization we use a smooth model of how the leaves block the fluence radiation,
   which help speed computation and avoid local minima.
   We solve the optimization in two parts: an inner optimization computes the optimal leaf trajectories,
   given a dose-rate trajectory; an outer optimization computes the dose-rate trajectory that

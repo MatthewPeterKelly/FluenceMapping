@@ -1,3 +1,6 @@
+# Figures:
+**/*.pdf
+
 # Matlab autosave:
 **.*m~
 
