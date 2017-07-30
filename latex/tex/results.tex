@@ -1,7 +1,11 @@
 \section{Results}
 
+In this section we present a collection of simple experiments to demonstrate various features of the
+proposed algorithm.
 
-\subsection{Smoothing Experiment}
+
+\subsection{Smoothing Comparison}
+\label{sec:LeafSmoothingComparison}
 
 In Section \S\ref{sec:modelingFluenceBlocking} we describe a smooth model of how the leaves block radiation.
 Here we describe do a simple experiment to look at how adjusting that smoothing parameter affects the optimization.
@@ -22,42 +26,70 @@ This number was computed with a pilot study.
 Fewer trajectory segments lead to faster solve times, but the fitting error increases significantly.
 Using more trajectory segments takes longer, but at a trivial reduction in fitting error.
 
+Figure \ref{fig:smoothVsStiffOptimization} shows the two sequences of optimizations, one for the
+heavy smoothing of 0.5 cm and the other for the light smoothing of 0.05 cm.
+The objective function is normalized by the fitting error associated with a solution where the
+leaves completely block the radiation.
+Although both optimizations are able to find reasonable solutions, there are a few salient differences.
+The optimization with light smoothing takes about four times longer to run when
+compared to the optimization with heavy smoothing.
+The optimization with light smoothing also tends to get stuck in local minima, as shown by the
+objective function jumping around with small changes in the constant dose-rate.
+The optimization with heavy smoothing eventually converges to trajectories that rely on the
+smoothing behavior to achieve the desired fluence profile. This is clear from the discrepancy
+between the smooth and exact model for dose rates above 4 MU.
+That being said, this discrepancy between the models is small and the overall shape of the delivered
+fluence map is generally correct, as shown in Figure \ref{fig:smoothVsStiffOptimization}.
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{fig/smoothVsStiffOptimization.pdf}
-  \caption{Smooth vs. stiff beaf-blocking model in optimization.
-      In the optimization we smooth out the blocking caused by the edges of the leaves in the VMAT.
-      A larger value of smoothing helps the optimization converge quickly and reliably, but with a
-      loss of accuracy. Both plots show the leaf optimization for a sweep of constant dose rate
-      trajectories. The left plot (\textit{smooth optimization}) uses a larger smoothing width of 0.5 cm,
-      while the right plot (\textit{stiff optimization}) uses a smaller value of 0.05 cm.
-      The stiff optimization takes about four times longer to run, and is a close match for the
-      exact (non-smooth) model. The objective value does not vary smoothly as the dose rate
-      increases, suggesting that the optimization is struggling with local minima.
-      The smooth optimization runs faster and produces more consistent results as the dose rate changes.
-      The fitting value predicted by smooth model is better than the exact model, but it is still
-      a good fit, with the best solution being shown in \ref{fig:fluenceMapSmoothingExample}.
-  }
+  \caption{Comparison of heavy and light smoothing in leaf-blocking model.
+           In each plot we ran 24 leaf optimizations, sweeping through a range of constant dose-rate trajectories.
+           The optimizations in the left plot used a leaf smoothing distance of 0.5 cm, while the
+           right plot used 0.05 cm.
+           Notice that the left set of optimization does a better job of avoiding local minima,
+           but that there is a disparity between the fluence profile produced by the smooth model
+           and the exact (no smoothing) model.
+           The right plot does better job of matching the exact model, but it tends to get stuck in local minima
+           and takes significantly (4x) longer to run.
+           The solution for a dose rate of 5.2 MU on the left plot is
+           shown in detail in Figure \ref{fig:fluenceMapSmoothingExample}.
+          }
   \label{fig:smoothVsStiffOptimization}
 \end{figure}
-
-
-
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{fig/fluenceMapSmoothingExample.pdf}
-  \caption{Fluence fitting with a constant fluence dose rate of 5.2 MU,
-      optimizing using the smooth model for leaf blocking, with a smoothing width of 0.5 cm.
-      The optimization was able to achieve a very good fit with the smooth model, but the
-      exact (no smoothing) value for the fluence delivered is also quite close.}
+  \caption{ Optimal leaf-trajectories, computed with a smoothing width of 0.5 cm and a constant
+            dose-rate of 5.2 MU. Note the small discrepancy between the smooth model of the
+            delivered fluence and the exact (no smoothing) model.}
   \label{fig:fluenceMapSmoothingExample}
 \end{figure}
 
 
-\subsection{Iterative Smoothing reduction}
+\subsection{Iterative Smoothing Refinement}
 
+One common trick in trajectory optimization is to solve a trajectory optimization problem
+iteratively, making small adjustments to the problem statement between each optimization,
+and using the result of the previous optimization to seed the next.
+
+We can do this iterative refinement with the leaf-blocking smoothing parameter,
+starting with heavy smoothing and then using that solution to seed another optimization
+with a smaller smoothing term.
+
+We test this procedure by doing an experiment similar to the one discussed in
+\S Section \ref{sec:LeafSmoothingComparison}, but using the solution of the heavy-smoothing
+optimization to initialize the optimization with light smoothing.
+Here we will use a sequence of three optimizations, starting with a smoothing of
+0.5 cm, then moving to 0.1 cm, and finally 0.05 cm for the final optimization.
+
+The resulting sweep of optimizations is shown in Figure \ref{fig:iterSmoothSweep}.
+These results are better than either the heavy or light smoothing optimizations.
+The total optimization time for all three optimizations is less than simply running the
+light smoothing optimization from a niave guess, the model discrepancy is tiny, and the
+solver is generally able to do a good job of avoiding local minima.
 
 \begin{figure}
   \centering
@@ -66,26 +98,31 @@ Using more trajectory segments takes longer, but at a trivial reduction in fitti
            given a constant fluence dose rate. Each optimization here is actually a set of three
            optimizations, each using a successively smaller smoothing distance. In all cases
            the first optimization used a smoothing distance of 0.5cm, the second used 0.1cm,
-           and the final optimizaiton used 0.05cm. This technique results in faster solve times
+           and the final optimization used 0.05cm. This technique results in faster solve times
            than a single optimization with the smallest smoothing parameter, while also avoiding
            local minima.}
   \label{fig:iterSmoothSweep}
 \end{figure}
 
-
-
+Figure \ref{fig:fluenceMapIterativeBest} again shows the optimal leaf trajectories with a
+constant dose rate of 5.2 MU. The leaf trajectories are qualitatively similar to those in
+Figure \ref{fig:fluenceMapSmoothingExample}, but slight changes are present that make the
+exact-model fluence profile much closer to the target profile.
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{fig/fluenceMapIterativeBest.pdf}
   \caption{This plot shows the optimal leaf trajectories and delivered fluence map using the
-           best solution (dose rate = 5.2 MU) found by the iterative optimization procedure.}
+           best solution (dose rate = 5.2 MU) found by the iterative optimization procedure.
+           Note that these trajectories are similar to those in
+           Figure \ref{fig:fluenceMapSmoothingExample}, but that the fitting is better here.}
   \label{fig:fluenceMapIterativeBest}
 \end{figure}
 
 
-
 \subsection{Misc. Notes:}
+
+\todo{Clean up this section, perhaps add a few small plots.}
 
 It seems that the velocity smoothing has little effect on the optimization: no significant
 change observed in computation time, convergence, or trajectories.

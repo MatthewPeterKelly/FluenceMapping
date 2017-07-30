@@ -1,48 +1,56 @@
 \section{Discussion}
 
-\subsection{Why first-order splines?}
-\todo{Clean up this explanation -- it was copied from email}
+\subsection{Why first-order splines to represent trajectories?}
 
-I ended up deciding to use a low-order trajectory representation (piece-wise linear splines) for the trajectories.
-I found that this made the calculations much faster and also numerically more stable.
-The leaf trajectories seem to reliably converge to a good solution now.
+In this section we informally discuss some of the design choices that were made when creating this
+trajectory-based method for solving leaf and dose-rate trajectories for fluence mapping.
 
-Why use a linear spline instead of a single polynomial?
-\begin{itemize}
-  \item using a higher-order polynomial is typically done to get a more accurate solution,
-      since the convergence rate is related to order of the polynomial. In our case this breaks down because of the nasty integral in the fluence map calculation.
-  \item consider a comparison of a single cubic polynomial vs three linear segments.
-      The linear segments are locally coupled while the cubic polynomial is globally coupled.
-      This makes optimization over the linear segments faster.
-  \item for trajectory optimization with constraints (in this case, position, velocity, and rate limits),
-      it is generally better to use a low-order spline.
-      This allows us to enforce the limits at the knot points, and be sure that they will be satisfied between them.
-  \item the smoothness that we get from the cubic seems to be offset by the difficulty of the
-      optimization to converge to a good solution.
-  \item we can force smooth solutions from the piecewise linear trajectory by adding a
-      regularization term (minimizing the integral of velocity-squared) to the objective function.
-  \item we can increase the accuracy by increasing the number of grid points.
-  \item the linear spline with the regularization term seems better at avoiding local minima than the cubic spline
-\end{itemize}
+\todo{This section can be heavily edited to reduce length, and needs some detailed citations.}
 
-In practice, the version of the code with linear splines seems to reliably converge to good leaf trajectories (given an arbitrary dose rate profile). Adding more grid points refines the accuracy of the solution, and the regularization term seems to do a good job of avoiding local minima. We can discuss more over the phone as well. I think that it would be good for me to get a better understanding of how the existing methods work, so that I can compare and contrast them with this method.
+There are many ways to represent trajectories, and nearly all of them have associated transcription (optimization) methods.
+In general there is one major trade-off:
+use a larger number of low-order segments or
+use a smaller number of high-order segments.
+
+Selecting the correct method order typically comes down to problem specifics.
+High-order methods are best when the system model is good and high accuracy is important.
+The accuracy of these methods relies on the underlying problem being smooth over each
+mesh interval, with few places where path constraints serve to shape the trajectory.
+Low-order methods are best when the trajectory shape is dominated by path constraints and
+high accuracy is not critical.
+\todo{Cite my tutorial paper? Check if I discuss this in detail.
+Also see if it is discussed in the reviews by Rao or Betts.}
+
+Although our specific problem does not have path constraints, it does have a highly nonlinear objective function.
+The smooth leaf-blocking model causes a strong nonlinearity in the objective function,
+which would make careful mesh refinement necessary if high-order methods were used.
+\todo{Cite GPOPS-II paper? Or perhaps Rao or Betts tutorial paper.}
+We can avoid the need for careful mesh refinement by simply using a low-order model,
+which also makes it easier to precisely handle the velocity and position limits on the leaf trajectories.
+
+We did a few brief checks, comparing a few different schemes using cubic splines and compared them
+to the linear spline presented in this paper. Although both methods worked, the linear spline methods
+were much faster and were able to provide an good fit to the desired fluence profile.
+One possible reason for the speed increase is that a set of three linear segments have less
+coupling terms than a cubic spline fitting the same trajectory domain. The resulting sparsity in the
+jacobian (derivative of the objective function) helps optimization. \cite{Betts}
+
+The major drawback of a linear spline for leaf trajectories is that the resulting trajectory tends
+to be less smooth, with a step change in velocity between each segment. This effect can be minimized
+by using a large number of linear segments. In some cases this can lead to a slight numerical
+instability, which is easily addressed by adding a small regularization term to the optimization,
+minimizing the integral of the velocity-squared along the trajectory.
+
 
 \subsection{Inner Optimization:  Leaf Trajectories}
 
-The inner optimization now seems to be working reliably.
-It generally takes 0.1 - 1.0 seconds to solve the optimization, depending on the users choice of parameters.
-
-For most reasonable dose profiles the optimization is able to find a set of leaf trajectories
-that produce a reasonable approximation of the target fluence map.
-
-I did a few rough convergence studies and the solution appears to be stable with respect to changes
-in the number of trajectory segments and smoothing parameters.
-This suggests that the inner optimization is able to avoid local minima.
-
-\todo{More formal discussion of the convergence study with plots.}
+\todo{Discuss figures in results section.}
 
 
 \subsection{Outer Optimization:  Dose-Rate Trajectories}
+
+\todo{Try doing a better job of performing two optimizations, and varying the leaf smoothing between them.
+      See if this improves results.}
 
 The outer optimization with CMAES works, but it still has the problem with local minima:
 running the optimization N times produces several different solutions.
@@ -65,4 +73,4 @@ but they tend to be nearly-constant dose rate, and often relatively high.
 Another option would be to modify the regularization term to include a  penalty on large
 dose rates, which is perhaps desirable in the real system.
 
-\todo{finish this up}
+\todo{final results pending}

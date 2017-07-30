@@ -198,9 +198,14 @@ The limits on velocity can thus be written as linear inequality constraints:
 
 \todo{Write this section.}
 
+Proposed Method (yet to be tested):  Start by running CMAES witha wide search and heavy smoothing
+parameters. Optimize over the smoothed objective at the low level, but then spend the extra CPU
+time to benchmark the actual value of each solution. Once this optimization converges, then
+run a second round of CMAES using iterative smoothing refinement.
+
 \subsection{Objective Function:}
 
-Balance between fitting term and change in dose rate term.
+Best leaf trajectories!
 
 \todo{Finish writing}
 
