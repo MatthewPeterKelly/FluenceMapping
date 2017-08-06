@@ -9,7 +9,9 @@
   with many local minima.
   In our optimization we use a smooth model of how the leaves block the fluence radiation,
   which help speed computation and avoid local minima.
-  We solve the optimization in two parts: an inner optimization computes the optimal leaf trajectories,
-  given a dose-rate trajectory; an outer optimization computes the dose-rate trajectory that
+  We solve the optimization in two parts:
+  an inner optimization computes the optimal leaf trajectories,
+  given a dose-rate trajectory,
+  and an outer optimization computes the dose-rate trajectory that
   minimizes the fitting error across all inner leaf-trajectory optimizations.
 \end{abstract}
