@@ -136,20 +136,17 @@ while a larger smoothing parameter will lead to faster optimization.
   s(t, \alpha) = \frac{1}{1 + e^{-t \alpha}}
 \end{equation}
 
-In practice it is useful to define the smoothing parameter $\alpha$ in terms of a smoothing distance ($\gamma$)
-and the fraction change ($\Delta s$) in smoothing over this distance.
-There is a physical interpretation of the smoothing distance $\gamma$ for the leaf-blocking model:
-it is the distance, centered on the edge of the leaf, where the edge is blurred by the smoothing.
+In practice it is useful to define the smoothing parameter $\alpha$ in terms of
+a smoothing distance $\Delta x$ and the the
+value $\gamma$ of the smoothing function at a distance $\Delta x$ from the boundary.
+For example, $\Delta x = 0.05$ cm and $\gamma = 0.98$ means that
+at a distance of 0.05 cm from the edge of the leaf, it is blocking 98\% of the radiation,
+and at a distance of -0.05 cm it is blocking 2\% of the radiation.
 
 \begin{equation}
-  \alpha = \frac{-2}{\gamma} \ln \left( \frac{1}{2} (1 - \Delta s) \right)
+  \alpha = \frac{-\ln(1-\gamma)}{\Delta x}
   \label{eqn:SmoothingDistanceParameter}
 \end{equation}
-
-\MPKcomment{I think that this equation for computing the smoothing parameter is wrong.
-            It doesn't make sense in the limit as $\Delta s \to 0$.
-            I'll figure out the issue at some point in the next week or two.}
-
 
 \subsection{Objective Function}
 

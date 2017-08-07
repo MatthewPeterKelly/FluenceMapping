@@ -30,7 +30,7 @@ rBnd = [0, 10]; % bounds on dose rate  (10 MU / sec)
 param.limits.time = tBnd;
 param.limits.position = xBnd;
 param.limits.velocity = vBnd;
-param.smooth.leafBlockingFrac = 0.95;  % Change in smoothing over width  --  strongly coupled to solve time
+param.smooth.leafBlockingFrac = 0.98;  % Change in smoothing over width  --  strongly coupled to solve time
 param.smooth.velocityObjective = 0;
 param.nQuad = 30;  % Number of segments for quadrature calculations
 param.guess.defaultLeafSpaceFraction = 0.2;
@@ -55,7 +55,7 @@ doseVals([1,end]) = [];
 guess = [];
 
 %% Smooth Data:
-smoothParam = 0.05*diff(xBnd);  % Width of the smoothing  --  strongly coupled to solve time
+smoothParam = 0.03*diff(xBnd);  % Width of the smoothing  --  strongly coupled to solve time
 param.smooth.leafBlockingWidth = smoothParam;
 
 % Loop over each constant dose profile:
@@ -72,7 +72,7 @@ for iDose = 1:nDose
 end
 
 %% Stiff Data:
-stiffParam = 0.005*diff(xBnd);  % Width of the smoothing  --  strongly coupled to solve time
+stiffParam = 0.003*diff(xBnd);  % Width of the smoothing  --  strongly coupled to solve time
 param.smooth.leafBlockingWidth = stiffParam;
 
 % Loop over each constant dose profile:

@@ -12,10 +12,7 @@ if nargin == 0
     return
 end
 
-d = width/2;
-f = 0.5*(1+frac);
-
-alpha = -log(1-f)/d;
+alpha = -log(1-frac)/width;
 
 end
 
@@ -24,14 +21,12 @@ end
 
 function test_getExpSmoothingParam()
 
-width = 0.1;
-frac = 0.0;
+width = 1;
+frac = 0.98;
 
 t = width*linspace(-1,1,250);
 alpha = getExpSmoothingParam(frac, width);
 y = expSigmoid(t,alpha);
-
-delY = y(end) - y(1)
 
 figure(32); clf;
 plot(t,y);
