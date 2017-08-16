@@ -19,7 +19,7 @@ such that the optimization procedure naturally focuses on global aspects of the 
 at least from a fluence mapping perspective?  Let me know if I should add a short section about
 trajectory optimization. Also, should background be its own section, or is a sub-section in the
 Introduction acceptable?}
-\KvAcomment{Did I forget to send my contribution to the introduction from quite a while ago as a pull request?} 
+\KvAcomment{Did I forget to send my contribution to the introduction from quite a while ago as a pull request?}
 
 \subsection{Fluence Mapping as Continuous Optimization}
 \label{sec:FluenceMappingAsContinuousOptimization}
@@ -50,16 +50,18 @@ David, is there any chance FMO might give us continuous - or at least very preci
 The fluence delivered at each position, $g(x)$, is the time-integral of the dose rate for the times that position is exposed.
 This time domain $\mathcal{T}(x)$ is the set of times when the position $x$ is not blocked by either of the leaves, i.e.,
 $\mathcal{T}(x)$ is the set of all times $t$ such that $x_L(t) < x \leq x_R(t)$,
-as illustrated by Figure \addref{exposure figure} .
+as illustrated by Figure \ref{fig:administeredDose} .
 
 \begin{equation}
 g(x) = \int_{\mathcal{T}(x)} d(t) dt
 \label{eqn:deliveredFluenceDose}
 \end{equation}
 
-For this work we will leave the initial and final leaf positions as decision variables in the optimization, 
-but it is a trivial extension to enforce arbitrary initial and final leaf positions 
-with a simple modification to the position limits at these points in the trajectory. 
+\input{fig/administeredDose}
+
+For this work we will leave the initial and final leaf positions as decision variables in the optimization,
+but it is a trivial extension to enforce arbitrary initial and final leaf positions
+with a simple modification to the position limits at these points in the trajectory.
 This might be useful when combining a sequence of fluence maps as shown in \cite{balvertcraft}.
 
 We will also assume that the available delivery time is given,
