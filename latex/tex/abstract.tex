@@ -1,17 +1,17 @@
 \begin{abstract}
-  We consider the problem of matching a given fluence map $f$ to a close approximation in
-  limited time $T$ by the use of a multi-leaf collimator,
+  We consider the problem of matching a given fluence map $f$ as well as possible in
+  limited time $T$ by the use of a multi-leaf collimator (MLC),
   i.e. the setting of IMRT and VMAT in radiation therapy.
   We use linear splines for leaf position and the dose rate as functions of time.
-  The optimization computes the dose-rate and leaf trajectories that produce the best
+  The optimization computes the dose rate and leaf trajectories that produce the best
   match for the target fluence map.
-  Computing the dose-rate and leaf trajectories is a difficult optimization problem
+  Computing the dose rate and leaf trajectories is a difficult optimization problem
   with many local minima.
   In our optimization we use a smooth model of how the leaves block the fluence radiation,
   which help speed computation and avoid local minima.
   We solve the optimization in two parts:
   an inner optimization computes the optimal leaf trajectories,
-  given a dose-rate trajectory,
-  and an outer optimization computes the dose-rate trajectory that
+  given a dose rate trajectory,
+  and an outer optimization computes the dose rate trajectory that
   minimizes the fitting error across all inner leaf-trajectory optimizations.
 \end{abstract}

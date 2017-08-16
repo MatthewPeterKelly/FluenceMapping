@@ -19,51 +19,54 @@ such that the optimization procedure naturally focuses on global aspects of the 
 at least from a fluence mapping perspective?  Let me know if I should add a short section about
 trajectory optimization. Also, should background be its own section, or is a sub-section in the
 Introduction acceptable?}
+\KvAcomment{Did I forget to send my contribution to the introduction from quite a while ago as a pull request?} 
 
 \subsection{Fluence Mapping as Continuous Optimization}
 \label{sec:FluenceMappingAsContinuousOptimization}
 
-Our goal is to compute the optimal leaf trajectories $z_L(t)$ and $z_U(t)$,
-as well as the optimal dose rate $r(t)$ of the radiation source.
+Our goal is to compute the optimal leaf trajectories $x_L(t)$ and $x_R(t)$,
+as well as the optimal dose rate $d(t)$ of the radiation source for $t\in[0,T]$.
 For this initial study we will consider only a single leaf pair,
 although our algorithm is structured such that it could be applied to an arbitrary number of leaf pairs.
 We will assume that adjacent leaves are independent of each other,
 neglecting the small coupling terms created by the tongue-and-groove mechanism on the real machine.
 
-We will assume that the desired fluence dose at each point $q_D(x)$ on the subject is given,
-and that we would like to compute the dose-rate $r(t)$ and leaf trajectories $z_L(t)$ and $z_U(t)$ that
-minimize the error between the fluence that is predicted to reach the target $q(x)$ and the desired
-fluence $q_D(x)$.
+Let the position domain of the fluence profile be denoted by $X$.
+We will assume that the target fluence at each floating point position $x\in X$, $f(x)$, is given.
+Our goal is to find the leaf trajectories $x_L(t)$ and $x_R(t)$ and dose rate pattern $d(t)$
+that minimize the squared integral error between the target fluence $f(x)$ and the delivered fluence $g(x)$:
 
 \begin{equation}
-\underset{r(t), \, x_L(t), \, x_U(t)}{\operatorname{argmin}}
-\int_X \bigg(q(x)) - q_D(x)\bigg)^2 dx
+\underset{d(t), \, x_L(t), \, x_R(t)}{\operatorname{argmin}}
+\int_X \bigg(f(x)) - g(x)\bigg)^2 dx .
 \label{eqn:fluenceMapOptimization}
 \end{equation}
 
 \vspace{6pt}
 
-The fluence dose at each location is the time-integral of the dose rate trajectory for the times
-when the radiation is not being blocked by the upper or lower leaves.
-This time domain $T(x)$ is the set of times when the position $x$ is not blocked by the leaves:
-$T(x)$ is the set of all times $t$ such that $ x_L(t) < x < x_U(t)$.
+\todo{In practice, target fluence comes in discrete format, bixels. How to proceed on fixing this mismatch?
+David, is there any chance FMO might give us continuous - or at least very precise - maps in the near future?}
+
+The fluence delivered at each position, $g(x)$, is the time-integral of the dose rate for the times that position is exposed.
+This time domain $\mathcal{T}(x)$ is the set of times when the position $x$ is not blocked by either of the leaves, i.e.,
+$\mathcal{T}(x)$ is the set of all times $t$ such that $x_L(t) < x \leq x_R(t)$,
+as illustrated by Figure \addref{exposure figure} .
 
 \begin{equation}
-q(x) = \int_{T(x)} r(t) dt
+g(x) = \int_{\mathcal{T}(x)} d(t) dt
 \label{eqn:deliveredFluenceDose}
 \end{equation}
 
-For this work we will leave the initial and final leaf positions as decision variables
-in the optimization, but it is a trivial extension to enforce arbitrary initial and final
-leaf positions with a simple modification to the position limits at these points in the
-trajectory. This might be useful when combining a sequence of fluence maps as shown in
-\addref{Multi-VMAT paper}.
+For this work we will leave the initial and final leaf positions as decision variables in the optimization, 
+but it is a trivial extension to enforce arbitrary initial and final leaf positions 
+with a simple modification to the position limits at these points in the trajectory. 
+This might be useful when combining a sequence of fluence maps as shown in \cite{balvertcraft}.
 
-We will also assume that the total duration of the trajectories is given,
+We will also assume that the available delivery time is given,
 but this could easily be added as a decision variable at a later time.
 
 % $x_L(0) = x_U(0)$ and
-% $x_L(T) = x_U(T)$ where
+% $x_L(t) = x_U(T)$ where
 % $t \in [0, T]$.
 
 
@@ -72,14 +75,19 @@ but this could easily be added as a decision variable at a later time.
 The optimization formulation presented in Section \S \ref{sec:FluenceMappingAsContinuousOptimization}
 is a good mathematical description of our goal, but it is not obvious how to solve it.
 In this paper we use a nested optimization approach,
-solving the dose-rate trajectory $r(t)$ in an outer optimization,
-and then solving the optimal leaf trajectories $z_L(t)$ and $z_U(t)$ as an inner optimization,
-given a candidate dose-rate trajectory.
+solving the dose rate trajectory $d(t)$ in an outer optimization,
+and then solving the optimal leaf trajectories $x_L(t)$ and $x_R(t)$ as an inner optimization,
+given a candidate dose rate trajectory.
 
-Partitioning the problem in this fashion makes physical sense: given a fixed dose-rate trajectory,
+Partitioning the problem in this fashion makes physical sense: given a fixed dose rate trajectory,
 the leaf trajectories are completely independent.
 This decoupling allows us to focus on designing the inner and outer optimizations differently,
 each specialized for the details of that optimization.
 
 \todo{David - do we need an equation here?
     If so, I'm not sure of the best way to write the nested optimization.}
+
+\KvAcomment{I'd formally formulate the inner and outer dose rate optimization problems, with objective and constraints and explaining which entities are variable and which operate as a parameter.}
+
+
+

@@ -4,7 +4,7 @@
 \label{sec:WhyUseLinearSplines}
 
 In this section we informally discuss some of the design choices that were made when creating this
-trajectory-based method for solving leaf and dose-rate trajectories for fluence mapping.
+trajectory-based method for solving leaf and dose rate trajectories for fluence mapping.
 
 \todo{This section should be edited to reduce length and needs some detailed citations.}
 
@@ -56,10 +56,10 @@ minimizing the integral of the velocity-squared along the trajectory.
 The outer optimization with CMAES works, but it still has the problem with local minima:
 running the optimization N times produces several different solutions.
 These solutions all have similar objective function values, but are created by different
-dose-rate trajectories.
+dose rate trajectories.
 
-It seems to me that the dose-rate optimization has a large number of similar-valued minima,
-since the leaf-trajectory optimization can find good solutions for most dose-rate trajectories.
+It seems to me that the dose rate optimization has a large number of similar-valued minima,
+since the leaf-trajectory optimization can find good solutions for most dose rate trajectories.
 The residual fitting error seems to be more related to the choice of discretization -- number of
 grid segments, rather than convergence failure.
 
@@ -68,7 +68,7 @@ leaf trajectories, to see if that helps force a better global solution, since th
 be more constrained. Second would be to play around more with global optimization and smoothing
 terms.
 
-If I make the smoothing term on the dose-rate trajectory large, then I get repeatable solutions,
+If I make the smoothing term on the dose rate trajectory large, then I get repeatable solutions,
 but they tend to be nearly-constant dose rate, and often relatively high.
 
 Another option would be to modify the regularization term to include a  penalty on large
