@@ -38,6 +38,11 @@
             \addplot[name path global = leafl, black, smooth, tension=0.75] coordinates{(0,0.2)(1,2)(2.5,3.7)(4.7,1.9)(8.5,4)(10,4)};
             \addplot[name path global = leafr, black, smooth, tension=0.75] coordinates{(0,0.2)(1,0.5)(2.5,2.5)(4.5,1.4)(6.5,2.3)(8,2.1)(10,4)};
 
+            \node[] at (axis cs:6.8,3.7) {$x_L$};
+            \node[] at (axis cs:8.2,1.5) {$x_R$};
+            \draw[MGHGrey!50] (7.2,3.7) -- (7.6,3.5);
+            \draw[MGHGrey!50] (8.2,1.8) -- (8,2.1);
+            
         \end{axis}
     \end{tikzpicture}
 
@@ -53,8 +58,8 @@
             axis y line = left,
             enlargelimits = {abs=0.0},
             axis line style = {-Latex[round]},
-            xticklabels = {$T$},
-            xtick = {10},
+            xticklabels = {0, $T$},
+            xtick = {0,10},
             yticklabels = {$d$},
             ytick = {2.5},
             xlabel style = {at={(ticklabel* cs:0.5,1.5)},anchor=north},
@@ -108,7 +113,10 @@
 
 \vspace{-0.7cm}
 \caption[Illustration of administered dose]{
-    Illustration of administered dose: the dose administered to a position $x$ equals the integral (shaded area) of the dose rate (lower panel) over the moments in time (blue lines) that position is exposed by the leaves (upper panel).
+    Illustration of administered dose. 
+    In the upper panel, the upper and lower lines display the trajectories of the left and right leaves, respectively; the lower panel shows the dose rate pattern.
+    The dose administered to a position $x$, $g(x)$, equals the integral (shaded area) of the dose rate $d(t)$ over the moments in time $\mathcal{T}(x)$ (blue lines) that position is exposed.
+%    Illustration of administered dose: the dose administered to a position $x$, $g(x)$, equals the integral (shaded area) of the dose rate (lower panel) over the moments in time $\mathcal{T}(x)$ (blue lines) that position is exposed by the leaves (upper panel).
     }
 \label{fig:administeredDose}
 \end{figure}
