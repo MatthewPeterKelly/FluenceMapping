@@ -1,25 +1,63 @@
 \section{Introduction}
-The optimal dynamic delivery of a given fluence map remains a difficult,
-largely unsolved problem, due to its inherent nonconvexity.
+The dynamic delivery of a given fluence map by a multi-leaf collimator (MLC) remains a difficult, largely unsolved problem.
+The sliding-window leaf-sweep algorithm (SWLS) \cite{leafsweep}, 
+    in which the MLC leaves cross the treatment field in a unidirectional fashion, 
+    achieves perfect fluence map replication if sufficient time is available \cite{Stein94}.
+However, the SWLS algorithm does not have to be efficient with respect to the required delivery time.
+Time is an important aspect of VMAT and IMRT treatment plans, for several reasons:
+\begin{enumerate}[i)]
+  \item The effect of patient movement on delivery inaccuracy increases in the time the patient is exposed to radiation.
+  \item Shorter treatments allow the treatment facility to help more patients on a given set of radiation therapy machines, 
+        which is particularly relevant to third-world countries as these machines are expensive.
+  \item $\hdots$
+\end{enumerate}
+Several studies have investigated the trade-off between treatment time and plan quality \cite{tradeoffSalari,tradeoffMCO,tradeoffCraft}.
+\cite{balvertcraft} were the first to include treatment time in the leaf sequencing step of the treatment plan optimization challenge.
+They construct the trade-off curve between delivery time and fluence map matching accuracy by optimizing leaf trajectories and dose rate patterns for a sequence of delivery times.
+% for several leaf trajectories independently
+For a given fluence map and fixed delivery time, the challenge of optimizing the leaf trajectories and dose rate versus time so that the given fluence map is matched as accurately as possible, subject to machine restrictions, presents a large scale nonconvex optimization problem.
 The nonconvexity of the fluence map matching problem leads to a large number of local minima.
-Many methods simply ignore this crucial aspect of the problem,
-and others use a multi-start procedure to find several local minima and return the best one found.
-For a thorough introduction to the complexities of dynamic fluence map delivery
-(which generally arises in the context of volumetric modulated arc therapy, VMAT),
-see \cite{balvertcraft} and \cite{unkvmatreview}.
+For a thorough introduction to the complexities of dynamic fluence map delivery (which generally arises in the context of volumetric modulated arc therapy, VMAT),
+ see \cite{balvertcraft} and \cite{unkvmatreview}.
 
-In this technical note, we investigate a regularization procedure which represents
-leaf trajectories and dose rates as linear splines (piece-wise linear functions),
-such that the optimization procedure naturally focuses on global aspects of the leaf trajectory/dose rate solution.
+%% Previously (until 22/08)
+%The optimal dynamic delivery of a given fluence map remains a difficult,
+%largely unsolved problem, due to its inherent nonconvexity.
+%The nonconvexity of the fluence map matching problem leads to a large number of local minima.
+%Many methods simply ignore this crucial aspect of the problem,
+%and others use a multi-start procedure to find several local minima and return the best one found.
+%For a thorough introduction to the complexities of dynamic fluence map delivery
+%(which generally arises in the context of volumetric modulated arc therapy, VMAT),
+%see \cite{balvertcraft} and \cite{unkvmatreview}.
 
+\cite{balvertcraft} developed a local search heuristic that initiates a gradient-informed interior point method from multiple, feasible starting solutions and returns the best local optimum found.
+Their approach leads to high quality solutions but is clinically infeasible due to large computation times.
+Like others, they represent the leaf trajectories and the dose rate pattern by discretizing the time domain:
+at several moments in time (also called control points), the positions of all leaf ends and the dose rate level is specified.
+The achieved precision is controlled by the amount of time that elapses between two adjacent control points.
 
-\subsection{Background}
+\cite{balvertcraft} and \cite{thesisKvA} % dependent on publishing date
+observed that the best found leaf trajectories and dose rate patterns are `smooth' in the sense that the leaves move across the field in a near-unidirectional fashion and that the dose rate pattern features only several ups and downs. %drops and rises
+In this technical note, we investigate a regularization procedure that exploits this smoothness property by representing leaf trajectories and the dose rate pattern by low-order polynomial splines.
+\footnote{A polynomial spline is a function that is formed by a sequence of polynomial segments.}
+For that, we make use of methods that are widely used in the field of trajectory control.
+For an overview of such methods, see \addref{Trajectory control}.
+\KvAcomment{Matthew, do you know a good paper/survey that explains or illustrates some of these methods?}
+The idea is that by representing leaf trajectories as low-order polynomials and optimizing over their coefficients, the size of the solution space can be significantly reduced.
+
+\todo{Integrate focus (leaf trajectories, dose rate pattern, no jaws), assumptions (no interdigitation, no tongue-and-groove effect) and constraints (maxDose, maxLeafSpeed).}
+
+%%% Previously (until 22/08)
+%In this technical note, we investigate a regularization procedure which represents
+%leaf trajectories and dose rates as linear splines (piece-wise linear functions),
+%such that the optimization procedure naturally focuses on global aspects of the leaf trajectory/dose rate solution.
 
 \todo{ David  --  Would you be able to add any background that is appropriate for this paper,
 at least from a fluence mapping perspective?  Let me know if I should add a short section about
 trajectory optimization. Also, should background be its own section, or is a sub-section in the
 Introduction acceptable?}
-\KvAcomment{Did I forget to send my contribution to the introduction from quite a while ago as a pull request?}
+\KvAcomment{20/08: Did I forget to send my contribution to the introduction from quite a while ago as a pull request?
+            Edit 22/08: Recovered the intro. Doesn't suite perfectly anymore, but provides some base. Mostly literature review.}
 
 \subsection{Fluence Mapping as Continuous Optimization}
 \label{sec:FluenceMappingAsContinuousOptimization}
