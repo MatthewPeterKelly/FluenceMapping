@@ -76,23 +76,23 @@ top=20mm,
   In our optimization we use a smooth model of how the leaves block the fluence radiation,
   which helps speed computation and avoid local minima.
   We solve the optimization in two parts:
-  an outer optimization loop that optimizes the dose rate pattern over time, and 
+  an outer optimization loop that optimizes the dose rate pattern over time, and
   an inner optimization loop that--given a fixed dose rate pattern--optimizes the leaf trajectories.
 \end{abstract}
 
 \section{Introduction}
 The dynamic delivery of a given fluence map by a multi-leaf collimator (MLC) remains a difficult, largely unsolved problem.
-The sliding-window leaf-sweep algorithm (SWLS) \cite{leafsweep}, 
-    in which the MLC leaves cross the treatment field in a unidirectional fashion, 
+The sliding-window leaf-sweep algorithm (SWLS) \cite{leafsweep},
+    in which the MLC leaves cross the treatment field in a unidirectional fashion,
     achieves perfect fluence map replication if sufficient time is available \cite{Stein94}.
 However, the SWLS algorithm is not in general efficient with respect to the required delivery time.
 Time is an important aspect of VMAT and IMRT treatment plans, for several reasons:
 \begin{enumerate}[i)]
   \item The effect of patient movement on delivery inaccuracy increases in the time the patient is exposed to radiation.
-  \item Shorter treatments allow the treatment facility to help more patients on a given set of radiation therapy machines, 
+  \item Shorter treatments allow the treatment facility to help more patients on a given set of radiation therapy machines,
         which is particularly relevant to third-world countries as these machines are expensive.
   \item In general, there is a trade-off between dose quality and delivery time, and given how widespread the use of radiation therapy is in treating cancer, it makes sense to put in effort to assure that we are on the Pareto optimal frontier regarding these two objectives.
-  
+
 \end{enumerate}
 Several studies have investigated the trade-off between treatment time and plan quality \cite{tradeoffSalari,tradeoffMCO,tradeoffCraft}.
 \cite{balvertcraft} were the first to include treatment time in the leaf sequencing step of the treatment plan optimization challenge.
@@ -105,16 +105,19 @@ For a thorough introduction to the complexities of dynamic fluence map delivery 
 
 \section{Model}
 We assume we start with a fluence map $m$
-that has been optimized, along with additional fluence maps located around the patient, to collectively yield a dose distribution optimized for the particular patient's geometry (location of tumor and all nearby organs) and dose prescription. We do not model this aspect of the problem and simply assume that the optimal fluence maps are given. The algorithms set forth in this paper determine how to construct the given fluence map by moving the leaves of the MLC across the field (back and forth if necessary; unidirectionality is not imposed, and in fact it is known that enforcing unidirectionality can be suboptimal, see the Appendix of \cite{balvertcraft}) while varying the dose rate.
+that has been optimized, along with additional fluence maps located around the patient, to collectively yield a dose distribution optimized for the particular patient's geometry (location of tumor and all nearby organs) and dose prescription. We do not model this aspect of the problem and simply assume that the optimal fluence maps are given. The algorithms set forth in this paper determine how to construct the given fluence map by moving the leaves of the MLC across the field, while varying the dose rate.
+We allow the leaves to move back and forth if necessary, as enforcing unidirectionality can be suboptimal, see the Appendix of \cite{balvertcraft}.
+Moreover, we allow the leaves of every pair to start and end separately and not necessarily at the bounds of the treatment field, as these restrictions can also be suboptimal \cite{thesisKvA}.
+%Note: it is easy to include this restriction, e.g. to smooth transitions between maps.
 
-We assume the fluence map $m$ is given as a matrix where the rows correspond to the individual left and right leaf pairs, and the columns are the discretely optimized fluence bixels across the field, which can be as finely discretized as one wishes, but typical length scales are on the order of 0.5 cm for the row height of the MLC leaves, with the same value used for the across the row discretization. 
+We assume the fluence map $m$ is given as a matrix where the rows correspond to the individual left and right leaf pairs, and the columns are the discretely optimized fluence bixels across the field, which can be as finely discretized as one wishes, but typical length scales are on the order of 0.5 cm for the row height of the MLC leaves, with the same value used for the across the row discretization.
 
 Let $x^i_L(t)$ and $x^i_R(t)$ denote the leaf position of the $i$th left and right leaves respectively, at time $t$.
 Our framework puts the dose rate optimization in an outer loop. For a given dose rate over time profile, the leaf rows can be optimized independently (neglecting the small coupling terms created by the tongue-and-groove mechanism on the real machine, see \cite{unkvmatreview}), so for the remainder of the algorithm development, we consider only a single leaf row.
 
 Let the fluence row that we are considering from the $m$ matrix be given as a continuous function $f(x)$, where $x$ is the location across the fluence row. Note that $f(x)$, if it derives directly from a row $i$ of the matrix $m$, will be a piecewise constant function, but in general $f(x)$ could also be a smooth function of $x$. We typically think of a smooth function $f(x)$ since the piecewise constant version is simply an artifact of the fact that the dose optimization is done discretized.
 
-We assume the total allowed treatment delivery time $T$ is given. Our goal is then to compute leaf trajectories $x_L(t)$ and $x_R(t)$ as well as a dose rate $d(t)$ to recreate the fluence map row $f(x)$ as best as possible.
+We assume the total allowed treatment delivery time $T$ is given. Our goal is then to compute leaf trajectories $x_L(t)$ and $x_R(t)$ as well as a dose rate $d(t)$ to recreate the fluence row $f(x)$ as best as possible, while accounting for maximum leaf speed and maximum dose rate constraints.
 
 The fluence achieved at each position $x$, $g(x)$, is the time-integral of the dose rate for the times that position is exposed.
 This time domain $\mathcal{T}(x)$ is the set of times when the position $x$ is not blocked by either of the leaves, i.e.,
@@ -142,7 +145,7 @@ that minimize the squared integral error between the target fluence $f(x)$ and t
 
 With the problem we are trying to solve now formally stated as an optimization problem, we turn
 to the solution approach. The first step in this is to turn the integral problem statement into
-a format suitable for solution by a continuous optimization solver such as 
+a format suitable for solution by a continuous optimization solver such as
 FMINCON \cite{MatlabOptimizationToolbox2014}, SNOPT \cite{Snopt7}, or IPOPT \cite{Wachter2006}.
 This requires two main steps: determining a suitable numerical representation of the control variables, the leaf positions and doe rate as a function of time, and then using this representation
 to form a well-defined optimization problem (which in this case amounts to solving the intergral
@@ -151,7 +154,7 @@ in Equation \ref{eqn:deliveredFluenceDose}.
 \subsection{Spline representation}
 
 We represent each of the three time functions we are optimizing for
-by piecewise linear splines. Each of the three trajectories shares the same set of knot times $t_k \in \{t_0, t_1, \dots, t_N\}$, where $N$ is the number of knot points. We denote the value of the leaf positions and dose rate at knot time $t_k$ by $x_{L,k}$, $x_{R,k}$, and $d_k$. 
+by piecewise linear splines. Each of the three trajectories shares the same set of knot times $t_k \in \{t_0, t_1, \dots, t_N\}$, where $N$ is the number of knot points. We denote the value of the leaf positions and dose rate at knot time $t_k$ by $x_{L,k}$, $x_{R,k}$, and $d_k$.
 
 \begin{figure}
   \centering
@@ -182,7 +185,7 @@ Our solution is to rewrite the integral using a blocking function $k(t,x)$, whic
 \end{equation}
 
 Now we have a standard scalar integral and we can use any quadrature method to evaluate (\ref{eqn:fluenceDoseSimpleBounds}).
-In our case we use the midpoint (rectangle) quadrature rule. 
+In our case we use the midpoint (rectangle) quadrature rule.
 
 As just defined, our fluence blocking function $k(t,x)$
 would also have a discontinuous gradient, which would cause problems in the optimization.
@@ -264,7 +267,7 @@ The limits on velocity can thus be written as linear inequality constraints:
 
 \DCcomment{MATT I'm wondering if we need one more word here that describes going from
 the knot points to the smoothed k function to the g integral (any details that are of interest/might
-not be entirely obvious?).} 
+not be entirely obvious?).}
 
 \subsection{Iterative refinement of smoothing parameter}
 
