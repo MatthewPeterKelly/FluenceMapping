@@ -18,6 +18,7 @@ rBnd = [0, 10]; % bounds on dose rate
 nGrid = 5;  % Number of grid points for trajectories
 
 % parameters for the leaf trajectory fitting
+param.limits.position = xBnd;
 param.limits.velocity = vBnd;
 param.smooth.leafBlockingWidth = 0.05*diff(xBnd);  % 0.01 = more precise, 0.1 = faster
 param.smooth.leafBlockingFrac = 0.96;  % Change in smoothing over width (0.99 = more precise, 0.9 = faster)
