@@ -48,9 +48,10 @@ end
 
 % Setup figure
 fig = figure;
+ax = gca;
 hold on
 set(fig,'color','w');
-set(gca,'xtick',[],'ytick',[]);
+set(ax,'xtick',[],'ytick',[]);
 
 % Heatmap
 colormap('hot')
@@ -63,4 +64,13 @@ bHeight = 15;
 fWidth = m * bWidth;
 fHeight = n * bHeight;
 fig.Position = [420.00 378.00 fWidth fHeight];
+
+% Crop figure (no white spaces)
+outerpos = ax.OuterPosition;
+ti = ax.TightInset; 
+left = outerpos(1) + ti(1);
+bottom = outerpos(2) + ti(2);
+ax_width = outerpos(3) - ti(1) - ti(3);
+ax_height = outerpos(4) - ti(2) - ti(4);
+ax.Position = [left bottom ax_width ax_height];
 end
