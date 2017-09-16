@@ -8,14 +8,20 @@ clc
 % Settings
 isExample = 1; % 1 for example, 0 for real case
 tnow = datestr(now(),'_yyyy-mm-dd_HH-MM-SS');
+mainFolder = cd;
+figFolder = [mainFolder '\latex\fig'];
+cd(figFolder);
 
 if isExample == 1
     fig1 = FIG_heatMaps;
-    saveAndExportFigure(gcf, ['ExampleFluenceMaps' tnow])
+    fileName = ['ExampleFluenceMaps' tnow];
+    print(fig1,fullfile(figFolder, fileName),'-dpdf','-bestfit')
     fig2 = FIG_heatMap;
-    saveAndExportFigure(gcf, ['ExampleFluenceMap' tnow])
+    fileName = ['ExampleFluenceMap' tnow];
+    print(fig2,fullfile(figFolder, fileName),'-dpdf','-bestfit')
     fig3 = FIG_rowTrajectory; setFigureSize('square');
-    saveAndExportFigure(gcf, ['ExampleRowTrajectory' tnow])
+    fileName = ['ExampleRowTrajectory' tnow];
+    print(fig3,fullfile(figFolder, fileName),'-dpdf','-bestfit')
 else
 
 % Heatmap comparison
@@ -31,5 +37,18 @@ fig2 = FIG_heatMap(soln, isDel, maxDose);
 myRow = 1; % row index
 fig3 = FIG_rowTrajectory(soln,myRow,2); % for one row
 saveAndExportFigure(gcf, ['RowTrajectory' tnow])
-
 end
+
+%% Multiple delivery times
+
+% Import: soln struct type
+if isExample == 1
+    load('FluenceMapping\code\exampleSoln.mat');
+    soln(1).param.limits.dose = [0,3];
+    solnT = struct('T',{1,2,3,4,5,6,7,8},'soln', {soln, soln, soln, soln, soln, soln, soln, soln});
+    isStandAlone = 1;
+else
+    isStandAlone = 0;
+end
+FIG_generateTikzCode( solnT, isStandAlone)
+cd(mainFolder)
