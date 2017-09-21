@@ -20,11 +20,10 @@ if isStandAlone == 1
         '\usepackage{pgfplots}',...
         '\pgfplotsset{compat=newest} % Allows to place the legend below plot'};
     
+    fprintf(fileID,'%s\r\n',strA{:});
+    fprintf(fileID,'\r\n%s\r\n','\begin{document}');
+    clear strA
 end
-fprintf(fileID,'%s\r\n',strA{:});
-fprintf(fileID,'\r\n%s\r\n','\begin{document}');
-clear strA
-
 %% Some important values
 TGrid =[solnT.T];
 maxT = max(TGrid);
@@ -61,7 +60,7 @@ for iT = 1 : numT
     maxs(iT) = max(max(max(f,g)));
 end
 maxF = ceil(max(maxs));
-dmax = solnT(1).soln(1).param.limits.dose(2);
+dmax = solnT(1).soln(1).param.limits.doseRate(2);
 
 %% Prtin the axis options
 fprintf(fileID,'%s\r\n','\begin{tikzpicture}[x=1cm, y=1cm]');
@@ -142,7 +141,7 @@ fprintf(fileID,'%s\r\n',['\node[rotate=90, text width = width("Fluence"), text c
 for iT = 1 : numT
     T = TGrid(iT);
     Tsoln = solnT(iT).soln; % to get target
-    hFig = FIG_heatMap( Tsoln, 0, maxF );
+    hFig = FIG_heatMap( Tsoln, 1, maxF );
     fileName = ['delMap' num2str(T);]; % name unique to T
     print(hFig,fileName, '-dpng')
         

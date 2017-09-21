@@ -28,7 +28,7 @@ if nargin == 0
     soln.traj.time = 0:0.5:4.5;
     soln.target.xGrid = 1:7;
     soln.param.limits.position = [1,7];
-    dmax = 10;
+    soln(rowi).param.limits.doseRate = [0,10];
 elseif nargin == 1
     error('Please specify a row index.')
 elseif nargin == 2
@@ -48,7 +48,7 @@ try % Retrieve information
     nt = length(tGrid); % number of time steps
     m = length(soln(1,1).target.xGrid); % numer of bixels
     plim = soln(1,rowi).param.limits.position; % treatment field width
-    dmax = 10; % ADJUST
+    dmax = soln(rowi).param.limits.doseRate(2);
 catch
     error('Error catched. The input does not have the required format.')
 end
@@ -84,7 +84,12 @@ for t = 1 : nt
     % Color dose rate between leaf ends
     dt = d(t);
     colrt = ceil(dt/dmax*(length(colors)-1)); % determine color
-    patch([l r r l],[t-0.5 t-0.5 t+.5 t+0.5],colors(colrt,:));
+    if colrt > 0
+        thecol = colors(colrt,:);
+    else
+        thecol = [0,0,0]; % black
+    end
+    patch([l r r l],[t-0.5 t-0.5 t+.5 t+0.5],thecol);
 end
 
 % Extra: plot leaf trajectories as spline
