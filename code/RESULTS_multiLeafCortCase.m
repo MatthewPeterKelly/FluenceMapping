@@ -2,15 +2,26 @@
 % then fits the leaf trajectories to that data set.
 %
 
-clc; clear;
+clc; clear; close all;
+if ~exist('results','dir')
+    mkdir('results');
+end
 
 fileName = 'sampleData/cortFluenceMapData.mat'; % loads: targetFluence
 figNum = 1028;
 load(fileName);
 
-iRowSet = [1,4,7,11]; % max row is 13
+iRowSet = 1:2:13; % max row is 13
+duration = 1:10;
 
-tBnd = [0, 8];  % Time
+% Output directory:
+outputDirectory = ['results', filesep, 'cortData_',...
+            datestr(now, 'mmm-dd-HH-MM-SS')];
+mkdir(outputDirectory);
+
+for iDuration = 1:length(duration);
+
+tBnd = [0, duration(iDuration)];  % Time
 xBnd = targetFluence.rowSlicePosBnd ;  % Bound on leaf position
 vBnd = targetFluence.maxLeafSpeed*[-1,1];  % bounds on leaf velocity
 rBnd = [0, 1]*targetFluence.maxDoseRate; % bounds on dose rate
@@ -70,7 +81,6 @@ options.DispModulo = 1;
 options.SaveVariables = 'off';
 options.SaveFilename = '';
 
-
 % Use the default initialization for now
 guess = [];
 
@@ -82,10 +92,21 @@ guess = [];
 %% Get the best-ever solution:
 [objVal, soln] = leafTrajMultiFitObj(bestEver.x, dose, guess, target, param);
 
+% Output for plotting code:
+solnTimeDataStruct(iDuration).T = duration(iDuration);
+solnTimeDataStruct(iDuration).soln = soln;
+save([outputDirectory,filesep, 'SolnT.mat'], 'solnTimeDataStruct');
+
+%% Save the results:
+baseName = [outputDirectory,filesep, 'id-', num2str(iDuration), '_'];
+
+save([baseName, 'SolnData.mat'],'soln');
+
 % Plots!
 for iSoln = 1:length(soln)
 
 figure(5235 + iSoln); clf;
+figure('units','normalized','outerposition',[0 0 1 1])
 tGrid = soln(iSoln).traj.time;
 
 subplot(2,2,2); hold on;
@@ -111,6 +132,9 @@ legend('Fluence Target', 'Fluence Soln');
 set(gca,'YLim',xBnd);
 title(['Fluence Fitting, Row Index: ' num2str(iSoln)]);
 
-save2pdf(['MultiVMat_Row-' num2str(iSoln) '.pdf']);
+save2pdf([baseName, 'SolnRow-' num2str(iSoln) '.pdf']);
 
 end
+
+end  % Big loop over duration (iDuration)
+
