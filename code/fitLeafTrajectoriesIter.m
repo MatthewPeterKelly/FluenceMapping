@@ -10,7 +10,11 @@ widthList = param.smooth.leafBlockingWidth;
 
 param.smooth.leafBlockingWidth = widthList(1);
 soln(1) = fitLeafTrajectories(dose, guess, target, param);
-soln(1) = benchmarkSoln(soln(1));
+% soln(1) = benchmarkSoln(soln(1));
+if soln(1).exitFlag ~= 1  % Then optimization failed. Abort.
+    soln = NaN;
+    return;
+end
 
 for iter = 2:length(widthList)
     param.smooth.leafBlockingWidth = widthList(iter);
@@ -18,7 +22,11 @@ for iter = 2:length(widthList)
     guess.xLow = soln(iter-1).traj.xLow;
     guess.xUpp = soln(iter-1).traj.xUpp;
     soln(iter) = fitLeafTrajectories(dose, guess, target, param); %#ok<*AGROW>
-    soln(iter) = benchmarkSoln(soln(iter)); 
+%     soln(iter) = benchmarkSoln(soln(iter)); % Disable benchmarking
+    if soln(iter).exitFlag ~= 1  % Then optimization failed. Abort.
+        soln = NaN;
+        return;
+    end
 end
 
 end
