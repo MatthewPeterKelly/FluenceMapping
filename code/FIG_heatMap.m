@@ -19,22 +19,22 @@ if nargin == 0
     warning('No inputs specified. Example used.')
     isDel = 0;
     for row = 1 : 20
-        soln(1,row).target.xGrid = 1:30;
-        soln(1,row).target.fGrid = rand(1,30)*20;
-        soln(1,row).target.dx = 1;
+        soln{1,row}(1).target.xGrid = 1:30;
+        soln{1,row}(1).target.fGrid = rand(1,30)*20;
+        soln{1,row}(1).target.dx = 1;
         maxF = 30;
     end
 end
 
 try % Retrieve information
     n = numel(soln); % #leaf pairs
-    thegrid = soln(1,1).target.xGrid;
+    thegrid = soln{1,1}(end).target.xGrid;
     m = length(thegrid); %#bixels
     
     % Convert to matrix form
     f = zeros(n,m); % fluence map
     for row = 1 : n
-        rsoln = soln(1,row);
+        rsoln = soln{1,row}(end);
         if isDel == 1
             f(row,:) = rsoln.target.fSoln; % target
         else % isDel == 0

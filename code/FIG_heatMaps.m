@@ -17,17 +17,17 @@ function [ fig ] = FIG_heatMaps( soln )
 if nargin == 0
     warning('No inputs specified. Example used.')
     for row = 1 : 20
-        soln(1,row).target.xGrid = 1:30;
-        soln(1,row).target.fGrid = rand(1,30)*20;
-        soln(1,row).target.fSoln = soln(1,row).target.fGrid + rand(1,30)-0.5;
-        soln(1,row).target.dx = 1;
+        soln{1,row}(1).target.xGrid = 1:30;
+        soln{1,row}(1).target.fGrid = rand(1,30)*20;
+        soln{1,row}(1).target.fSoln = soln{1,row}(1).target.fGrid + rand(1,30)-0.5;
+        soln{1,row}(1).target.dx = 1;
     end
 end
 
 try % Retrieve information
     n = numel(soln); % #leaf pairs
-    thegrid = soln(1,1).target.xGrid;
-    thedx = soln(1,1).target.dx;
+    thegrid = soln{1,1}(end).target.xGrid;
+    thedx = soln{1,2}(end).target.dx;
     m = length(thegrid); %#bixels
     
     % Convert to matrix form
@@ -35,7 +35,7 @@ try % Retrieve information
     g = zeros(n,m); % delivered fluence
     
     for row = 1 : n
-        rsoln = soln(1,row);
+        rsoln = soln{1,row}(end);
         f(row,:) = rsoln.target.fGrid; % delivered fluence profile
         g(row,:) = rsoln.target.fSoln; % desired fluence profile
     end

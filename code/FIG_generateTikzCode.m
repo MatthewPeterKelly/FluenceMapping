@@ -32,7 +32,9 @@ numT = length(TGrid);
 
 objT = zeros(1,numT);
 for iT = 1 : numT
-    objT(iT) = sum([solnT(iT).soln.obj]);
+    for rowi = 1 : length(solnT(iT).soln)
+        objT(iT) = objT(iT) + solnT(iT).soln{1,rowi}(end).obj;
+    end
 end
 minObj = 0; %min(objT);
 maxObj = max(objT);
@@ -43,7 +45,7 @@ maxObj = maxObj/cY;
 
 % Determine maximum fluence over all(!) maps
 n = numel(solnT(1).soln); % #leaf pairs
-thegrid = solnT(1).soln(1,1).target.xGrid;
+thegrid = solnT(1).soln{1,1}(end).target.xGrid;
 m = length(thegrid); %#bixels
 
 maxs = zeros(1,numT);
@@ -53,14 +55,14 @@ for iT = 1 : numT
     g = zeros(n,m); % delivered fluence
 
     for row = 1 : n
-        rsoln = solnT(iT).soln(1,row);
+        rsoln = solnT(iT).soln{1,row}(end);
         f(row,:) = rsoln.target.fGrid; % delivered fluence profile
         g(row,:) = rsoln.target.fSoln; % desired fluence profile
     end
     maxs(iT) = max(max(max(f,g)));
 end
 maxF = ceil(max(maxs));
-dmax = solnT(1).soln(1).param.limits.doseRate(2);
+dmax = solnT(1).soln{1,1}(end).param.limits.doseRate(2);
 
 %% Prtin the axis options
 fprintf(fileID,'%s\r\n','\begin{tikzpicture}[x=1cm, y=1cm]');
@@ -223,8 +225,8 @@ end
 fprintf(fileID,'\r\n%s\r\n','% Draw the dose rate patterns');
 for iT = 1 : numT
     T = TGrid(iT);
-    time = solnT(iT).soln(1).traj.time; % assumes same grid among rows
-    dose = solnT(iT).soln(1).traj.dose; % assumes same grid among rows
+    time = solnT(iT).soln{1,1}(end).traj.time; % assumes same grid among rows
+    dose = solnT(iT).soln{1,1}(end).traj.dose; % assumes same grid among rows
     nTime = length(time);
     
     cor = [];

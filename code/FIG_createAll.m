@@ -4,6 +4,8 @@
 
 close all
 clc
+%addpath(genpath(cd));
+format bank
 
 % Settings
 isExample = 0; % 1 for example, 0 for real case
@@ -24,19 +26,22 @@ if isExample == 1
     print(fig3,fullfile(figFolder, fileName),'-dpdf','-bestfit')
 else
     % Load data 
-    resFolder = '\code\results\cortData_Sep-19-20-06-36';
-    solFolder = [mainFolder resFolder];
+    resFolder = '\code\results\cortDataIter_Oct-03-07-39-06';
+    figFolder = 'figures';
+    mkdir(figFolder); 
+    addpath(genpath(figFolder))
+    solFolder = [mainFolder resFolder figFolder];
     cd(solFolder)
     data = load(fullfile(solFolder, 'solnT.mat'));
     solnT = data.solnTimeDataStruct;
 
     % Make some choices
     myRow = 5; % index of row for which the trajectory is visualzed
-    myT = 6; % delivery time for which the delivered map is visualized
+    myT = 9; % delivery time for which the delivered map is visualized
     
     index = find([solnT.T] == myT);
     thesoln = solnT(index).soln;
-    maxDose = solnT(myT).soln(myRow).param.limits.doseRate(2);
+    maxDose = solnT(myT).soln{1,myRow}(end).param.limits.doseRate(2);
     
     % Heatmap comparison
     fig1 = FIG_heatMaps(thesoln); % for multiple leaf rows
@@ -48,7 +53,7 @@ else
     
     % Trajectory of a (central) row
     fig3 = FIG_rowTrajectory(thesoln,myRow,2); % for one row
-    saveAndExportFigure(gcf, ['RowTrajectory' tnow])
+    saveAndExportFigure(gcf, ['Trajectory_T' num2str(myT) '_Row' num2str(myRow) tnow])
 end
 
 %% Multiple delivery times

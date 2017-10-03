@@ -22,13 +22,13 @@ if nargin == 0
     warning('No inputs specified. Example used.')
     rowi = 1;
     leafType = 2;
-    soln.traj.dose = 5 + 3*(rand(1,10)-0.5);
-    soln.traj.xLow = [1:0.5:3, 4:0.25:5];
-    soln.traj.xUpp = soln.traj.xLow + 2*rand(1,10);
-    soln.traj.time = 0:0.5:4.5;
-    soln.target.xGrid = 1:7;
-    soln.param.limits.position = [1,7];
-    soln(rowi).param.limits.doseRate = [0,10];
+    soln{1,rowi}(1).traj.dose = 5 + 3*(rand(1,10)-0.5);
+    soln{1,rowi}(1).traj.xLow = [1:0.5:3, 4:0.25:5];
+    soln{1,rowi}(1).traj.xUpp = soln{1,1}(1).traj.xLow + 2*rand(1,10);
+    soln{1,rowi}(1).traj.time = 0:0.5:4.5;
+    soln{1,rowi}(1).target.xGrid = 1:7;
+    soln{1,rowi}(1).param.limits.position = [1,7];
+    soln{1,rowi}(1).param.limits.doseRate = [0,10];
 elseif nargin == 1
     error('Please specify a row index.')
 elseif nargin == 2
@@ -41,14 +41,14 @@ if leafType ~= 1 && leafType ~= 2
 end
 
 try % Retrieve information
-    d = soln(1,rowi).traj.dose;
-    xL = soln(1,rowi).traj.xLow;
-    xR = soln(1,rowi).traj.xUpp;
-    tGrid = soln(1,rowi).traj.time;
+    d = soln{1,rowi}(end).traj.dose;
+    xL = soln{1,rowi}(end).traj.xLow;
+    xR = soln{1,rowi}(end).traj.xUpp;
+    tGrid = soln{1,rowi}(end).traj.time;
     nt = length(tGrid); % number of time steps
-    m = length(soln(1,1).target.xGrid); % numer of bixels
-    plim = soln(1,rowi).param.limits.position; % treatment field width
-    dmax = soln(rowi).param.limits.doseRate(2);
+    m = length(soln{1,1}(end).target.xGrid); % numer of bixels
+    plim = soln{1,rowi}(end).param.limits.position; % treatment field width
+    dmax = soln{rowi}(end).param.limits.doseRate(2);
 catch
     error('Error catched. The input does not have the required format.')
 end
@@ -113,7 +113,7 @@ myTitle = ['Trajectory of leaf pair ' num2str(rowi) ' for $T=' num2str(tGrid(nt)
 %myTitle = ['Leaf pair ' num2str(rowi) '. Delivery time = ', num2str(tGrid(nt)) 's'];
 title(myTitle,'FontSize',12,'Interpreter','latex')
 yticks(1:nt)
-yticklabels(tGrid)
+yticklabels(round(tGrid,2))
 if leafType == 1
     axis([plim(1)-g plim(2)+g 0.5 nt+0.5]);
 else
