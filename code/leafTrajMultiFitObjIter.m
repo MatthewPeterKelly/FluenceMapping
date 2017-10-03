@@ -30,8 +30,8 @@ for i=1:nTarget
             warning('should never reach here!');
         end
     end
-    
-    if soln{i}(end).exitFlag == 1  % Optimization succeeded
+
+    if soln{i}(end).exitFlag >= 0  % Optimization succeeded
         
         fitObj = soln{i}(end).obj;
         

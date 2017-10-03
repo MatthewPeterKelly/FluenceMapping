@@ -33,7 +33,7 @@ rBnd = [0, 1]*targetFluence.maxDoseRate; % bounds on dose rate
 nGrid = round(tBnd(end)*2);  % Number of grid points for trajectories
 
 % Solve with a range of smoothing parameters
-smoothing = [0.1, 0.02]*diff(xBnd); % 0.01 = more precise, 0.1 = faster
+smoothing = [0.1, 0.05, 0.01]*diff(xBnd); % 0.01 = more precise, 0.1 = faster
 
 % parameters for the leaf trajectory fitting
 param.limits.time = tBnd;
@@ -41,20 +41,20 @@ param.limits.position = xBnd;
 param.limits.velocity = vBnd;
 param.limits.doseRate = rBnd;
 param.smooth.leafBlockingWidth = smoothing; 
-param.smooth.leafBlockingFrac = 0.96;  % Change in smoothing over width (0.99 = more precise, 0.9 = faster)
+param.smooth.leafBlockingFrac = 0.97;  % Change in smoothing over width (0.99 = more precise, 0.9 = faster)
 param.smooth.velocityObjective = 1e-6;   % 1e-6 = more precise, 1e-3 faster, smooth leaf traj
 param.nQuad = 20;  % number of segments to use for quadrature. 50 = more precise, 10 = faster.
 param.guess.defaultLeafSpaceFraction = 0.2;
 
 % Parameters for dose trajectory fitting
-param.smooth.doseObjective = 1e-1;   
+param.smooth.doseObjective = 1e-6;   
 
 % parameters for fmincon:
 param.fmincon = optimset(...
     'Display', 'off', ...
     'MaxIter', 100, ...
     'TolFun', 1e-3,...
-    'TolX', 1e-3);
+    'TolX', 1e-2);
 
 % Initial guess at the dose rate trajectory
 dose.tGrid = linspace(tBnd(1), tBnd(2), nGrid);
@@ -82,7 +82,7 @@ options.UBounds = zUpp;
 options.MaxFunEvals = 500;
 options.MaxIter = 50;
 options.TolX = 0.01*diff(rBnd);
-options.TolFun = 1e-4;
+options.TolFun = 1e-2;
 options.EvalInitialX = 'yes';
 options.DispModulo = 1;
 options.SaveVariables = 'off';
