@@ -4,16 +4,16 @@
 %
 
 clc; clear;
-load 'CortMapSet36.mat';   % sampleFluenceMapData
+load 'rawFluenceMapData.mat';   % sampleFluenceMapData
 
-resolution = 0.35;  % size of each pixel, in centimeters
+resolution = 1; % width of each bixel, in centimeters (prostate case)
 
 % Store the raw data:
-rawDataMap = flMaps{1}';
+rawDataMap = sampleFluenceMapData'; % second arc segment of prostate case
 targetFluence.rawData = rawDataMap;
-targetFluence.resolution = 0.35; % centimeters per pixel
+targetFluence.resolution = resolution; % centimeters per bixel
 targetFluence.maxLeafSpeed = 3;  % maximum leaf speed, cm / sec
-targetFluence.maxDoseRate = 10;  % maximum fluence dose rate, ?? / sec
+targetFluence.maxDoseRate = 10;  % maximum fluence dose rate, MU / sec
 
 % Rough dimensions
 [nRow, nCol] = size(rawDataMap);
@@ -22,14 +22,16 @@ targetFluence.colSlicePosBnd = [0, nRow*resolution];
 
 % Slice by row:
 for iRow=1:nRow
-   targetFluence.rowSlice(iRow).xGrid = linspace(0, nCol*resolution, nCol);
-   targetFluence.rowSlice(iRow).fGrid = rawDataMap(iRow, :);
+    targetFluence.rowSlice(iRow).xGrid = 1/2*resolution:resolution:nCol*resolution;
+    %linspace(0, nCol*resolution, nCol);
+    targetFluence.rowSlice(iRow).fGrid = rawDataMap(iRow, :);
 end
 
 % Slice by column:
 for iCol=1:nCol
-   targetFluence.colSlice(iCol).xGrid = linspace(0, nRow*resolution, nRow);
-   targetFluence.colSlice(iCol).fGrid = rawDataMap(:, iCol)';
+    targetFluence.colSlice(iCol).xGrid = 1/2*resolution:resolution:nRow*resolution;
+    %targetFluence.colSlice(iCol).xGrid = linspace(0, (nRow-1)*resolution, nRow+1);
+    targetFluence.colSlice(iCol).fGrid = rawDataMap(:, iCol)';
 end
 
 % Save the data!

@@ -22,7 +22,7 @@ outputDirectory = ['results', filesep, 'cortDataIter_',...
             datestr(now, 'mmm-dd-HH-MM-SS')];
 mkdir(outputDirectory);
 
-for iDuration = 1:length(duration);
+for iDuration = 1:length(duration)
 
 tBnd = [0, duration(iDuration)];  % Time
 xBnd = targetFluence.rowSlicePosBnd ;  % Bound on leaf position
@@ -154,4 +154,3 @@ save2pdf([baseName, 'SolnRow-' num2str(iSoln) '.pdf']);
 end
 
 end  % Big loop over duration (iDuration)
-
