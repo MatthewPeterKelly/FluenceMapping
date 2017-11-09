@@ -26,13 +26,14 @@ if isExample == 1
     print(fig3,fullfile(figFolder, fileName),'-dpdf','-bestfit')
 else
     % Load data 
-    resFolder = '\code\results\cortDataIter_Oct-03-07-39-06';
+    resFolder = '\code\results\cortDataIter_Oct-16-08-34-17_nonTrans';
     figFolder = 'figures';
+    cd([mainFolder resFolder])
     mkdir(figFolder); 
     addpath(genpath(figFolder))
-    solFolder = [mainFolder resFolder figFolder];
+    solFolder = [mainFolder resFolder '\' figFolder];
     cd(solFolder)
-    data = load(fullfile(solFolder, 'solnT.mat'));
+    data = load(fullfile([mainFolder resFolder], 'solnT.mat'));
     solnT = data.solnTimeDataStruct;
 
     % Make some choices
@@ -45,15 +46,15 @@ else
     
     % Heatmap comparison
     fig1 = FIG_heatMaps(thesoln); % for multiple leaf rows
-    saveAndExportFigure(gcf, ['FluenceMaps' tnow])
+    %saveAndExportFigure(gcf, ['FluenceMaps' tnow])
     
     % One heatmap
     isDel = 1;
-    fig2 = FIG_heatMap(thesoln, isDel, maxDose);
+    %fig2 = FIG_heatMap(thesoln, isDel, maxDose);
     
     % Trajectory of a (central) row
     fig3 = FIG_rowTrajectory(thesoln,myRow,2); % for one row
-    saveAndExportFigure(gcf, ['Trajectory_T' num2str(myT) '_Row' num2str(myRow) tnow])
+    %saveAndExportFigure(gcf, ['Trajectory_T' num2str(myT) '_Row' num2str(myRow) tnow])
 end
 
 %% Multiple delivery times

@@ -1,0 +1,128 @@
+\documentclass{standalone}
+\usepackage{graphicx,amsmath}
+\usepackage{amssymb,amsthm}
+\usepackage{varwidth}
+\usepackage{moresize}
+\usepackage[skins]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{external}
+\usetikzlibrary{calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest} % Allows to place the legend below plot
+
+\begin{document}
+\begin{tikzpicture}[x=1cm, y=1cm]
+\begin{axis}[
+	clip=false,
+	clip mode=individual,
+	width=\linewidth, % Scale the plot to \linewidth
+	height=150pt,
+	xmin=0, xmax=9,
+	ymin=0, ymax=6.6632,
+	enlarge x limits=false,
+	enlarge y limits=false,
+	axis lines=center,
+	axis line style={-},
+	grid=both,
+	grid style={line width=.2pt, draw=gray!30},
+	major grid style={line width=.3pt,draw=gray!60},
+	minor x tick num=1,
+	xlabel style = {anchor=west,
+	at={(ticklabel* cs:1.01,0)},
+	text width=width("Max delivery"),
+	},
+	ylabel style={at={(ticklabel* cs:1.01)},
+	anchor=south
+	},
+	xlabel={Max delivery \newline time (s)},
+	x tick label style={anchor=north},
+	y tick label style={anchor=east},
+	xtick distance=1,
+	scaled ticks=false,
+	max space between ticks=40pt, % controls % y ticks
+	try min ticks = 5,
+	ylabel=ssdif ($\times 10^2$)
+]
+
+% Plot the dots and connect
+	\addplot[black, mark=*] coordinates { (1,6.6632) (2,5.0608) (3,0.88424) (4,0.39222) (5,0.15384) (6,0.18854) (7,0.10765) (8,0.14099) (9,0.18955) };
+
+% Original map
+\node[anchor=west] at (9,7.047) {\footnotesize{Original map:}}; % Text
+\path[fill stretch image=origMap.png ] (9.2574,3.5235) rectangle (10.1974,6.6695); % Figure
+
+% Draw the fluence maps)
+\node[rotate=90, text width = width("Fluence"), text centered] at (0,-2.5797) {\footnotesize{Fluence map}};
+\path[fill stretch image=delMap1] (0.53,-4.1527) rectangle (1.47,-1.0067);
+\path[fill stretch image=delMap2] (1.53,-4.1527) rectangle (2.47,-1.0067);
+\path[fill stretch image=delMap3] (2.53,-4.1527) rectangle (3.47,-1.0067);
+\path[fill stretch image=delMap4] (3.53,-4.1527) rectangle (4.47,-1.0067);
+\path[fill stretch image=delMap5] (4.53,-4.1527) rectangle (5.47,-1.0067);
+\path[fill stretch image=delMap6] (5.53,-4.1527) rectangle (6.47,-1.0067);
+\path[fill stretch image=delMap7] (6.53,-4.1527) rectangle (7.47,-1.0067);
+\path[fill stretch image=delMap8] (7.53,-4.1527) rectangle (8.47,-1.0067);
+\path[fill stretch image=delMap9] (8.53,-4.1527) rectangle (9.47,-1.0067);
+
+% Draw the colorbar
+\path[fill stretch image=colorBar] (9.65,-4.1527) rectangle (10.29,-1.0067);
+
+% Draw the dose rate axis
+\node[rotate=90, text width = width("Dose Rate"), text centered] at (0,-5.6628) {\footnotesize{Dose rate (MU/s)}};
+\node[anchor=north, text centered] at (5,-7.4245) {\footnotesize{Time (s)}};
+\draw[-] (0.53,-6.9212) -- (1.47,-6.9212);
+\draw[-] (0.53,-6.9212) -- (0.53,-4.4044);
+\draw[-] (1.53,-6.9212) -- (2.47,-6.9212);
+\draw[-] (1.53,-6.9212) -- (1.53,-4.4044);
+\draw[-] (2.53,-6.9212) -- (3.47,-6.9212);
+\draw[-] (2.53,-6.9212) -- (2.53,-4.4044);
+\draw[-] (3.53,-6.9212) -- (4.47,-6.9212);
+\draw[-] (3.53,-6.9212) -- (3.53,-4.4044);
+\draw[-] (4.53,-6.9212) -- (5.47,-6.9212);
+\draw[-] (4.53,-6.9212) -- (4.53,-4.4044);
+\draw[-] (5.53,-6.9212) -- (6.47,-6.9212);
+\draw[-] (5.53,-6.9212) -- (5.53,-4.4044);
+\draw[-] (6.53,-6.9212) -- (7.47,-6.9212);
+\draw[-] (6.53,-6.9212) -- (6.53,-4.4044);
+\draw[-] (7.53,-6.9212) -- (8.47,-6.9212);
+\draw[-] (7.53,-6.9212) -- (7.53,-4.4044);
+\draw[-] (8.53,-6.9212) -- (9.47,-6.9212);
+\draw[-] (8.53,-6.9212) -- (8.53,-4.4044);
+
+% y-ticks
+\node[anchor=east] at (0.53,-6.9212) {\footnotesize{0}};
+\node[anchor=east] at (0.53,-4.4044) {\footnotesize{10}};
+
+% x-ticks
+\node[anchor=north] at (0.59,-6.9212) {\footnotesize{0}};
+\node[anchor=north] at (1.41,-6.9212) {\footnotesize{1}};
+\node[anchor=north] at (1.59,-6.9212) {\footnotesize{0}};
+\node[anchor=north] at (2.41,-6.9212) {\footnotesize{2}};
+\node[anchor=north] at (2.59,-6.9212) {\footnotesize{0}};
+\node[anchor=north] at (3.41,-6.9212) {\footnotesize{3}};
+\node[anchor=north] at (3.59,-6.9212) {\footnotesize{0}};
+\node[anchor=north] at (4.41,-6.9212) {\footnotesize{4}};
+\node[anchor=north] at (4.59,-6.9212) {\footnotesize{0}};
+\node[anchor=north] at (5.41,-6.9212) {\footnotesize{5}};
+\node[anchor=north] at (5.59,-6.9212) {\footnotesize{0}};
+\node[anchor=north] at (6.41,-6.9212) {\footnotesize{6}};
+\node[anchor=north] at (6.59,-6.9212) {\footnotesize{0}};
+\node[anchor=north] at (7.41,-6.9212) {\footnotesize{7}};
+\node[anchor=north] at (7.59,-6.9212) {\footnotesize{0}};
+\node[anchor=north] at (8.41,-6.9212) {\footnotesize{8}};
+\node[anchor=north] at (8.59,-6.9212) {\footnotesize{0}};
+\node[anchor=north] at (9.41,-6.9212) {\footnotesize{9}};
+
+% Draw the dose rate patterns
+\addplot[black, mark=*, mark size=1pt] coordinates {(0.53,-5.4277) (0.84333,-5.4032) (1.1567,-5.4069) (1.47,-5.4024) };
+\addplot[black, mark=*, mark size=1pt] coordinates {(1.53,-4.4044) (1.765,-4.4044) (2,-4.4429) (2.235,-4.4044) (2.47,-4.4044) };
+\addplot[black, mark=*, mark size=1pt] coordinates {(2.53,-4.4189) (2.718,-4.4044) (2.906,-4.4044) (3.094,-4.4044) (3.282,-4.4044) (3.47,-4.4044) };
+\addplot[black, mark=*, mark size=1pt] coordinates {(3.53,-4.8974) (3.6867,-5.0143) (3.8433,-4.9997) (4,-4.9658) (4.1567,-4.9503) (4.3133,-4.8852) (4.47,-4.8876) };
+\addplot[black, mark=*, mark size=1pt] coordinates {(4.53,-5.3164) (4.6643,-5.2738) (4.7986,-5.3127) (4.9329,-5.3028) (5.0671,-5.3445) (5.2014,-5.3417) (5.3357,-5.4037) (5.47,-5.3561) };
+\addplot[black, mark=*, mark size=1pt] coordinates {(5.53,-5.6628) (5.6475,-5.6628) (5.765,-5.6628) (5.8825,-5.6628) (6,-5.6628) (6.1175,-5.6628) (6.235,-5.6628) (6.3525,-5.6628) (6.47,-5.6628) };
+\addplot[black, mark=*, mark size=1pt] coordinates {(6.53,-5.6628) (6.6344,-5.6628) (6.7389,-5.6628) (6.8433,-5.6628) (6.9478,-5.6628) (7.0522,-5.6628) (7.1567,-5.6628) (7.2611,-5.6628) (7.3656,-5.6628) (7.47,-5.6628) };
+\addplot[black, mark=*, mark size=1pt] coordinates {(7.53,-6.5171) (7.624,-6.3562) (7.718,-6.1704) (7.812,-6.0816) (7.906,-5.973) (8,-5.9043) (8.094,-5.8312) (8.188,-5.7218) (8.282,-5.6682) (8.376,-5.6579) (8.47,-5.7622) };
+\addplot[black, mark=*, mark size=1pt] coordinates {(8.53,-5.6367) (8.6155,-5.6608) (8.7009,-5.8379) (8.7864,-6.1601) (8.8718,-6.3764) (8.9573,-6.3893) (9.0427,-6.2114) (9.1282,-6.3654) (9.2136,-6.2457) (9.2991,-6.1073) (9.3845,-6.3435) (9.47,-6.2539) };
+
+\end{axis}
+\end{tikzpicture}
+\end{document}
