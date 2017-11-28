@@ -6,7 +6,7 @@ function x = expSigmoid(t, alpha)
 %   alpha = smoothing parameter
 %
 % OUTPUTS:
-%   x = 0.5 + 0.5*t./sqrt(t.*t + alpha*alpha)
+%   x = 1./(1 + exp(-t*alpha));
 %       (smoothly varying from 0 to 1)
 %
 
