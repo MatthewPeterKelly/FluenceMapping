@@ -10,7 +10,7 @@ clc; clear;
 duration = 10;  % duration of the leaf trajectories
 nGrid = 6; % number of grid points in the leaf trajectories
 dataSetNames = {'unimodal','bimodal'};
-alphaVec = [0.01, 0.1, 0.5];  % smoothing width, centimeters
+alphaVec = [0.5, 0.1, 0.02];  % smoothing width, centimeters
 alphaName = {'light','moderate','heavy'};
 iterSchedule = {...  % schedule of smoothing to compute
     1, 2, 3, ...
@@ -104,17 +104,17 @@ subplot(1,3,1);
 bar(Result.objVal);
 title('Obj. Val. Smooth')
 set(gca,'XTickLabel',dataSetNames)
-legend(legendText);
+legend(legendText,'Location','best');
 subplot(1,3,2);
 bar(Result.objExact);
 title('Obj. Val. Exact')
 set(gca,'XTickLabel',dataSetNames)
-legend(legendText);
+legend(legendText,'Location','best');
 subplot(1,3,3);
 bar(Result.cpuTime)
 title('CPU time')
 set(gca,'XTickLabel',dataSetNames)
-legend(legendText);
+legend(legendText,'Location','best');
 setFigureSize('wide')
 save2pdf('FIG_smoothingParamSweep_barChart.pdf')
 
@@ -126,7 +126,7 @@ for iDataSet = 1:nDataSet
         plot(Result.cpuTime(iDataSet,iIterSch), Result.objExact(iDataSet,iIterSch),...
             'o','MarkerSize',8,'LineWidth',4);
     end
-    legend(legendText);
+    legend(legendText,'Location','best');
     xlabel('CPU time');
     ylabel('Objective Value (no smoothing)')
 end
