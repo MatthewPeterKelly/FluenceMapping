@@ -73,12 +73,17 @@ alpha = getExpSmoothingParam(frac, width);
 
 nTime = 5;
 tGrid = linspace(0, 5, nTime);
-xLow = 0.0 + 1.7*rand(1, nTime);
-xUpp = 0.3 + 1.7*rand(1, nTime);
-xUpp(xUpp < xLow) = xLow(xUpp < xLow);
-dose = 4*rand(1, nTime);
 
-nQuad = 50;  % Number of segments for quadrature approximiation
+% xLow = 0.0 + 1.7*rand(1, nTime);
+% xUpp = 0.3 + 1.7*rand(1, nTime);
+% xUpp(xUpp < xLow) = xLow(xUpp < xLow);
+% dose = 4*rand(1, nTime);
+
+xLow = [0, 0.2, 0.3, 0.6, 1.1];
+xUpp = [0.3, 0.4, 0.6, 1.5, 1.8];
+dose = 4 * ones(1, nTime);
+
+nQuad = 500;  % Number of segments for quadrature approximiation
 tic
 fGrid = getFluence(xGrid, tGrid, xLow, xUpp, dose, alpha, nQuad);
 toc

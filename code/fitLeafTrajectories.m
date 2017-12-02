@@ -18,6 +18,11 @@ function soln = fitLeafTrajectories(dose, guess, target, param)
 %   param.nQuad = number of sub-samples to use for quadrature
 %   param.guess.defaultLeafSpaceFraction = 0.25;
 %   param.fmincon = optimset('fmincon') = options to pass to fmincon
+global CPU_TIMES OBJ_VALUE OBJ_EXACT ITER_COUNT
+CPU_TIMES = zeros(1000,1);
+OBJ_VALUE = zeros(1000,1);
+OBJ_EXACT = zeros(1000,1);
+ITER_COUNT = 0;
 
 xBnd = param.limits.position;
 vBnd = param.limits.velocity;
@@ -48,22 +53,22 @@ zGuess = packDecVars(xLowGuess, xUppGuess);
 Aineq_xLim = [diag(ones(nTime,1)), diag(-ones(nTime,1))];
 bineq_xLim = zeros(nTime,1);
 
-% Constraint: -hSeg*diff(xLow) <= -vLow   ;   hSeg*diff(xLow) <= vUpp 
+% Constraint: -hSeg*diff(xLow) <= -vLow   ;   hSeg*diff(xLow) <= vUpp
 nSeg = nTime-1;
 hSeg = diff(dose.tGrid);
 diffMat = [zeros(nSeg,1), eye(nSeg)] - [eye(nSeg), zeros(nSeg,1)];
-Aineq_vLow = [-diffMat, zeros(nSeg, nTime);  
-              diffMat, zeros(nSeg, nTime)];
+Aineq_vLow = [-diffMat, zeros(nSeg, nTime);
+    diffMat, zeros(nSeg, nTime)];
 bineq_vLow = [-(vLow.*hSeg)';
-              (vUpp.*hSeg)'];
-          
-% Constraint: -hSeg*diff(xUpp) <= -vLow   ;   hSeg*diff(xLow) <= vUpp 
+    (vUpp.*hSeg)'];
+
+% Constraint: -hSeg*diff(xUpp) <= -vLow   ;   hSeg*diff(xLow) <= vUpp
 diffMat = [zeros(nSeg,1), eye(nSeg)] - [eye(nSeg), zeros(nSeg,1)];
-Aineq_vUpp = [zeros(nSeg, nTime), -diffMat;  
-              zeros(nSeg, nTime), diffMat];
+Aineq_vUpp = [zeros(nSeg, nTime), -diffMat;
+    zeros(nSeg, nTime), diffMat];
 bineq_vUpp = [-(vLow.*hSeg)';
-              (vUpp.*hSeg)'];
-          
+    (vUpp.*hSeg)'];
+
 % Inequality constraint:
 Aineq = [Aineq_xLim; Aineq_vLow; Aineq_vUpp];
 bineq = [bineq_xLim; bineq_vLow; bineq_vUpp];
@@ -72,6 +77,12 @@ bineq = [bineq_xLim; bineq_vLow; bineq_vUpp];
 param.smooth.leafBlockingAlpha = getExpSmoothingParam(param.smooth.leafBlockingFrac, param.smooth.leafBlockingWidth);
 alpha = param.smooth.leafBlockingAlpha;
 nQuad = param.nQuad;
+
+% Check to see if we should use diagnostics:
+if isfield(param,'diagnostics')
+    timer = tic;
+    param.fmincon.OutputFcn = @(x, val, state)( fluenceFittingObjectiveExact(x, val, dose, target, param, timer) );
+end
 
 % Set up for fmincon:
 problem.objective = @(z)( fluenceFittingObjective(z, dose, target, param) );
@@ -106,7 +117,9 @@ soln.guess = guess;
 soln.dose = dose;
 soln.target = target;
 soln.param = param;
-soln.benchmark = [];
+soln.diagnostics.cpuTime = CPU_TIMES(1:ITER_COUNT);
+soln.diagnostics.objVal = OBJ_VALUE(1:ITER_COUNT);
+soln.diagnostics.objExact = OBJ_EXACT(1:ITER_COUNT);
 
 end
 
@@ -128,6 +141,30 @@ end
 function z = packDecVars(xLow, xUpp)
 
 z = [xLow, xUpp]';
+
+end
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+
+function stop = fluenceFittingObjectiveExact(zGuess, objVal, dose, target, param, timer)
+% [obj, cpuTime] = fluenceFittingObjectiveExact(zGuess, objVal, dose, target, param)
+%
+% Compute the objective function, but set alpha to a very small value and
+% use a large number of quadrature points. The result is an accurate
+% estimate of the fluence that would be delivered by the exact model.
+%
+global CPU_TIMES OBJ_VALUE OBJ_EXACT ITER_COUNT
+
+param.nQuad = param.diagnostics.nQuad;
+param.smooth.leafBlockingAlpha = param.diagnostics.alpha;
+objExact = fluenceFittingObjective(zGuess, dose, target, param);
+
+% Save the data:
+ITER_COUNT = ITER_COUNT + 1;
+CPU_TIMES(ITER_COUNT) = toc(timer);
+OBJ_VALUE(ITER_COUNT) = objVal.fval;
+OBJ_EXACT(ITER_COUNT) = objExact;
+stop = false;
 
 end
 
