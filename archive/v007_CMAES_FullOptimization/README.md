@@ -4,9 +4,11 @@ This code uses trajectory optimization to solve the fluence mapping problem:
 compute the leaf and dose-rate trajectories to deliver a desired fluence dose profile to a patient.
 Here we model a single leaf pair, although the real device has many leaves.
 These leaves are moved to selectively block the radiation emitted by a single common source.
-We consider only the sub-problem of computing the leaf-trajectories given an arbitrary dose-rate trajectory.
 
 ## Alogorithm:
+- **Nested Optimization  --**
+We use a nested optimization framework: an outer optimization computes the dose profile, while an inner optimization computes the leaf trajectories.
+This is done so that the problem scales well when there are many leaves, which are coupled by a single dose profile.
 - **Radiation-Blocking model  --**
 One of the challenges of computing the fluence that is delivered to the target is an integral where the domain is related to the inverse of the leaf trajectory.
 This integral can be rewritten so that it uses the full time-domain of the problem,
