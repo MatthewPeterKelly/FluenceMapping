@@ -7,10 +7,10 @@ clc; clear;
 %%  Generate the results
 
 % Parameters for experiment:
-duration = 10;  % duration of the leaf trajectories
+duration = 8;  % duration of the leaf trajectories
 nGrid = 6; % number of grid points in the leaf trajectories
 dataSetNames = {'unimodal','bimodal'};
-alphaVec = [0.5, 0.1, 0.02];  % smoothing width, centimeters
+alphaVec = [0.5, 0.2, 0.05];  % smoothing width, centimeters
 alphaName = {'light','moderate','heavy'};
 iterSchedule = {...  % schedule of smoothing to compute
     1, 2, 3, ...
@@ -129,9 +129,23 @@ for iDataSet = 1:nDataSet
     legend(legendText,'Location','best');
     xlabel('CPU time');
     ylabel('Objective Value (no smoothing)')
+    title(dataSetNames{iDataSet});
 end
 setFigureSize('wide')
 save2pdf('FIG_smoothingParamSweep_pareto.pdf')
 
+% Plot the best of the solutions:
+figure(2255); clf;
+setFigureSize('wide')
+subplot(1,2,1); title('Fluence Fitting')
+subplot(1,2,2); title('Leaf Trajectories') 
+plotResult(results{2,4}(end));
+save2pdf('FIG_smoothingParamSweep_bimodalTraj.pdf')
 
+figure(2258); clf;
+setFigureSize('wide')
+subplot(1,2,1); title('Fluence Fitting')
+subplot(1,2,2); title('Leaf Trajectories') 
+plotResult(results{1,4}(end));
+save2pdf('FIG_smoothingParamSweep_unimodalTraj.pdf')
 
