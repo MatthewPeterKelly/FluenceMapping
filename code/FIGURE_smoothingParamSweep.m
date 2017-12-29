@@ -6,8 +6,11 @@ clc; clear;
 
 %%  Generate the results
 
+% Select the data source:
+dataFun = @getCortData;  %{@getCortData, @getSimData}
+
 % Parameters for experiment:
-duration = 8;  % duration of the leaf trajectories
+duration = 9;  % duration of the leaf trajectories
 nGrid = 6; % number of grid points in the leaf trajectories
 dataSetNames = {'unimodal','bimodal'};
 alphaVec = [0.5, 0.2, 0.05];  % smoothing width, centimeters
@@ -20,7 +23,7 @@ iterSchedule = {...  % schedule of smoothing to compute
 % Parameters for the optimization:
 param.smooth.leafBlockingFrac = 0.95;
 param.smooth.velocityObjective = 1e-6;
-param.nQuad = 20;
+param.nQuad = 25;
 param.guess.defaultLeafSpaceFraction = 0.25;
 param.diagnostics.nQuad = 10*param.nQuad;
 param.diagnostics.alpha = getExpSmoothingParam(0.999, 0.001);
@@ -36,7 +39,7 @@ results = cell(nDataSet, nIterSch);
 for iDataSet = 1:nDataSet
     
     % Load the data set:
-    data = getSimData(dataSetNames{iDataSet});
+    data = dataFun(dataSetNames{iDataSet});
     
     % Set up the dose structure:
     dose.tGrid = linspace(0, duration, nGrid);
@@ -48,7 +51,7 @@ for iDataSet = 1:nDataSet
     target.fGrid = data.f;
     
     % Updates for the parameters from the data set:
-    param.limits.position = data.x([1,end]);
+    param.limits.position = [data.xLow, data.xUpp];
     param.limits.velocity = data.maxLeafSpeed * [-1, 1];
     
     for iIterSch = 1:nIterSch
@@ -100,28 +103,31 @@ end
 
 % Generate a simple figure with bar charts
 figure(2342); clf;
-subplot(1,3,1);
+hSub(1) = subplot(1,3,1);
 bar(Result.objVal);
 title('Obj. Val. Smooth')
 set(gca,'XTickLabel',dataSetNames)
-legend(legendText,'Location','best');
-subplot(1,3,2);
+set(gca,'YScale','log')
+legend(legendText,'Location','SouthEast');
+hSub(2) = subplot(1,3,2);
 bar(Result.objExact);
 title('Obj. Val. Exact')
 set(gca,'XTickLabel',dataSetNames)
-legend(legendText,'Location','best');
+set(gca,'YScale','log')
+legend(legendText,'Location','SouthEast');
 subplot(1,3,3);
 bar(Result.cpuTime)
 title('CPU time')
 set(gca,'XTickLabel',dataSetNames)
-legend(legendText,'Location','best');
+legend(legendText,'Location','SouthEast');
 setFigureSize('wide')
 save2pdf('FIG_smoothingParamSweep_barChart.pdf')
+linkaxes(hSub,'y');
 
 % Create a pareto-front chart:
 figure(2253); clf;
 for iDataSet = 1:nDataSet
-    subplot(1,nDataSet,iDataSet); hold on;
+    hSub(iDataSet) = subplot(1,nDataSet,iDataSet); hold on;
     for iIterSch=1:nIterSch
         plot(Result.cpuTime(iDataSet,iIterSch), Result.objExact(iDataSet,iIterSch),...
             'o','MarkerSize',8,'LineWidth',4);
@@ -130,22 +136,27 @@ for iDataSet = 1:nDataSet
     xlabel('CPU time');
     ylabel('Objective Value (no smoothing)')
     title(dataSetNames{iDataSet});
+    set(gca,'YScale','log')
 end
+linkaxes(hSub, 'y');
 setFigureSize('wide')
 save2pdf('FIG_smoothingParamSweep_pareto.pdf')
+
 
 % Plot the best of the solutions:
 figure(2255); clf;
 setFigureSize('wide')
-subplot(1,2,1); title('Fluence Fitting')
-subplot(1,2,2); title('Leaf Trajectories') 
+hSub(1) = subplot(1,2,1); title('Fluence Fitting');
+hSub(2) = subplot(1,2,2); title('Leaf Trajectories');
 plotResult(results{2,4}(end));
 save2pdf('FIG_smoothingParamSweep_bimodalTraj.pdf')
+linkaxes(hSub,'y');
 
 figure(2258); clf;
 setFigureSize('wide')
-subplot(1,2,1); title('Fluence Fitting')
-subplot(1,2,2); title('Leaf Trajectories') 
+hSub(1) = subplot(1,2,1); title('Fluence Fitting');
+hSub(2) = subplot(1,2,2); title('Leaf Trajectories');
 plotResult(results{1,4}(end));
 save2pdf('FIG_smoothingParamSweep_unimodalTraj.pdf')
+linkaxes(hSub,'y');
 
