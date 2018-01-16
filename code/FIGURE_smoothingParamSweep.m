@@ -133,7 +133,7 @@ for iDataSet = 1:nDataSet
             'o','MarkerSize',8,'LineWidth',4);
     end
     legend(legendText,'Location','best');
-    xlabel('CPU time');
+    xlabel('CPU time (s)');
     ylabel('Objective Value (no smoothing)')
     title(dataSetNames{iDataSet});
     set(gca,'YScale','log')
@@ -143,7 +143,7 @@ setFigureSize('wide')
 save2pdf('FIG_smoothingParamSweep_pareto.pdf')
 
 
-% Plot the best of the solutions:
+%% Plot the best of the solutions:
 figure(2255); clf;
 setFigureSize('wide')
 hSub(1) = subplot(1,2,1); title('Fluence Fitting');
