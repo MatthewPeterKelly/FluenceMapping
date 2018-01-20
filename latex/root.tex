@@ -1,12 +1,22 @@
-\documentclass[12pt]{article}
+\documentclass{iopart}
+\usepackage{iopams}
+\expandafter\let\csname equation*\endcsname\relax
+\expandafter\let\csname endequation*\endcsname\relax
+
+%craft note: i had to remove this to get the citations working:
+%\usepackage{harvard}
+
+%\documentclass[12pt]{article}
 
 % Misc. packages
+\usepackage{appendix}
 \usepackage{fancyvrb}
 \usepackage{url}
 \usepackage{hyperref}
 \usepackage{authblk}
 \usepackage{geometry}
 \usepackage{enumerate}
+\usepackage{lineno}
 
 % Math & Symbol packages
 \usepackage{mathtools,bm}
@@ -39,6 +49,7 @@
 \newcommand{\MPKcomment}[1]{{\color{magenta}\par {[{\bf MPK: } { #1}} ] \\    }}
 \newcommand{\DCcomment}[1]{{\color{magenta}\par {[{\bf DC: } { #1}} ] \\    }}
 \newcommand{\KvAcomment}[1]{{\color{magenta}\par {[{\bf KvA: } { #1}} ] \\    }}
+\newcommand{\quotes}[1]{``#1''}   % Quotes!
 
 % Document formatting
 \linespread{1.4}
@@ -51,33 +62,22 @@ top=20mm,
 \renewcommand{\floatpagefraction}{.8}
 \renewcommand\Affilfont{\fontsize{9}{10.8}\itshape}
 
-%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
-\title{Solving the dynamic fluence map sequencing problem using piecewise linear leaf position and dose rate functions}
-%\title{Dynamic leaf sequencing via trajectory representations of leaf trajectories and dose rate}
+% This line prints line numbers
+\linenumbers
 
-\author{Matthew Kelly, Koos van Amerongen, David Craft}
-\affil[]{Department of Radiation Oncology, Massachusetts General Hospital, Harvard Medical School}
-%% \date{February 13, 2016}  % Comment to use today's date
+%\renewcommand{\harvardurl}{URL: \url}
 
 \begin{document}
 
-\maketitle
-\thispagestyle{empty}
+\title[Dynamic MLC sequencing with splines ]{Solving the dynamic fluence map sequencing problem using piecewise linear leaf position and dose rate functions}
+\author{Matthew Kelly, Koos van Amerongen,$^1$, David Craft$^2$}
+\address{$^1$ Department of Econometrics and Operations Research/Center for Economic Research (CentER), Tilburg University, PO Box 90153, 5
+000 LE Tilburg, The Netherlands}
+\address{$^2$ Department of Radiation Oncology, Massachusetts General Hospital and Harvard Medical School, Boston, MA 02114, USA}
+\ead{dcraft@mgh.harvard.edu}
 
 \begin{abstract}
-  Within the setting of intensity modulated radiation therapy (IMRT) and the fully continuous version of IMRT called
-  volumetric modulated radiation therapy (VMAT), we consider the problem of matching a given fluence map $f$ as well as possible in
-  limited time $T$ by the use of a multi-leaf collimator (MLC).
-  We use linear splines for MLC leaf positions and the dose rate as functions of time, a novel contribution of this work.
-  The optimization computes the dose rate and leaf trajectories that best produce
-  the target fluence map.
-  Computing the dose rate and leaf trajectories is a non-convex optimization problem
-  with many local minima.
-  In our optimization we use a smooth model of how the leaves block the fluence radiation,
-  which helps speed computation and avoid local minima.
-  We solve the optimization in two parts:
-  an outer optimization loop that optimizes the dose rate pattern over time, and
-  an inner optimization loop that, given a fixed dose rate pattern, optimizes the leaf trajectories.
+  Within the setting of intensity modulated radiation therapy (IMRT), and the fully continuous version of IMRT called volumetric modulated radiation therapy (VMAT), we consider the problem of matching a given fluence map as well as possible in limited time by the use of a multi-leaf collimator (MLC). We introduce two modeling strategies to manage the nonconvexity and the associated local minima of this problem. The first is the use of linear splines to model the MLC leaf positions and the dose rate as functions of time. The second is a progressively controllable smooth model (instead of a step function) of how the leaves block the fluence radiation. We solve the problem in two parts: an outer loop that optimizes the dose rate pattern over time, and an inner loop that, given a fixed dose rate pattern, optimizes the leaf trajectories.
 \end{abstract}
 
 \section{Introduction}
@@ -94,7 +94,7 @@ Time is an important aspect of VMAT and IMRT treatment plans, for several reason
   \item In general, there is a trade-off between dose quality and delivery time, and given how widespread the use of radiation therapy is in treating cancer, it makes sense to put in effort to assure that we are on the Pareto optimal frontier regarding these two objectives.
 
 \end{enumerate}
-Several studies have investigated the trade-off between treatment time and plan quality \cite{tradeoffSalari,tradeoffMCO,tradeoffCraft}.
+Several studies have investigated the trade-off between treatment time and plan quality \cite{tradeoffSalari,tradeoffMCO,tradeoffCraft,balvertcraft}.
 \cite{balvertcraft} were the first to include treatment time directly in a dynamic leaf sequencing step of the treatment plan optimization.
 They constructed the trade-off curve between delivery time and fluence map matching accuracy by optimizing leaf trajectories and dose rate patterns for a sequence of delivery times.
 % for several leaf trajectories independently
@@ -103,33 +103,22 @@ The nonconvexity of the fluence map matching problem leads to a large number of 
 For a thorough introduction to the complexities of dynamic fluence map delivery (which generally arises in the context of dynamic IMRT and VMAT),
  see \cite{balvertcraft} and \cite{unkvmatreview}.
 
-\section{Model}
+\section{Methods}
 \label{sec:model}
 
-Our starting point is a fluence map $m$
-that has been optimized, along with additional fluence maps located around the patient, to collectively yield a dose distribution optimized for the particular patient's geometry (location of tumor and all nearby organs) and dose prescription. We do not model this aspect of the problem and simply assume that the optimal fluence maps are given. The algorithms set forth in this paper determine how to construct a single given fluence map by moving the leaves of the MLC across the field, while varying the dose rate.
-Our optimization allows the leaves to move back and forth, a requirement for achieving optimal motions, as shown in the Appendix of \cite{balvertcraft}.
-Moreover, we allow the leaves of every pair to start and end separately and not necessarily at the bounds of the treatment field, as these restrictions can also be suboptimal \cite{thesisKvA}.
-%Note: it is easy to include this restriction, e.g. to smooth transitions between maps.
+Our starting point is a fluence map $m$ that has been optimized, along with additional fluence maps located around the patient, to collectively yield a dose distribution optimized for the particular patient's geometry (location of tumor and all nearby organs) and dose prescription. We do not model this aspect of the problem and simply assume that the optimal fluence maps are given. The algorithms set forth in this paper determine how to construct a single given fluence map by moving the leaves of the MLC across the field, while varying the dose rate. Our optimization allows the leaves to move back and forth, a requirement for achieving optimal motions, as shown in the Appendix of \cite{balvertcraft}. Moreover, we allow the leaves of every pair to start and end separately and not necessarily at the bounds of the treatment field, as these restrictions can also be suboptimal \cite{thesisKvA}. Thus the problem we model and solve is the dynamic IMRT field delivery problem, which is a subproblem of the full dynamic VMAT problem \cite{vmerge}.
 
 We assume the fluence map $m$ is given as a matrix where the rows correspond to the individual left and right leaf pairs, and the columns are the discretely optimized fluence bixels across the field, which can be as finely discretized as one wishes. Typical length scales are on the order of 0.5 cm for both the row height of the MLC leaves and the across-the-row discretization.
 
-Let $x^i_L(t)$ and $x^i_R(t)$ denote the leaf position of the $i$th left and right leaves respectively, at time $t$.
-Our framework puts the dose rate optimization in an outer loop. Once the outer loop sets a dose rate over time profile, the leaf rows can be optimized independently (neglecting the small coupling terms created by the tongue-and-groove mechanism on the real machine, see \cite{unkvmatreview}), so for the remainder of the algorithm development, we consider only a single leaf row.
-
-For the remainder of this section we will consider a single row of the fluence map $m$, and thus a single pair of leaves (left and right). Let $f(x)$ be the target fluence that should be delivered for that row.
-
-% We typically think of $f(x)$ as a continuous function of $x$, although it if is computed directly from the target fluence map $m$ then $f$ will be piecewise constant. It is reasonable to model $f(x)$ as continuous because the fluence map $m$ is really just a discrete approximation of a smooth function.
-
-We assume the total allowed treatment delivery time $T$ is given. Our goal is then to compute leaf trajectories $x_L(t)$ and $x_R(t)$ as well as a dose rate $d(t)$ to recreate the fluence row $f(x)$ as best as possible, while accounting for maximum leaf speed, maximum dose rate, and collision constraints.
+Let $x^i_L(t)$ and $x^i_R(t)$ denote the leaf position of the $i$th left and right leaves respectively, at time $t$. Our framework puts the dose rate optimization in an outer loop. Once the outer loop sets a dose rate over time profile, the leaf rows can be optimized independently (neglecting the small coupling terms created by the tongue-and-groove mechanism on the real machine, see \cite{unkvmatreview}), so for the remainder of the algorithm development, we consider only a single leaf row. Let $f(x)$ be the target fluence that should be delivered for that row. Note if $f$ is obtained from an optimized fluence map $m$ is is piecewise constant, but in general $f$ can also be smooth. We assume the total allowed treatment delivery time $T$ is given. Our goal is then to compute the dose rate $d(t)$ (outer loop) and the leaf trajectories $x_L(t)$ and $x_R(t)$ (inner loop) to recreate the fluence row $f(x)$ as best as possible, while accounting for maximum leaf speed, maximum dose rate, and collision constraints. We chose to focus on the leaf trajectory optimization in this report; the outer loop dose rate search is described in \ref{CMAES}.
 
 The fluence achieved at each position is $g(x)$, which is the time-integral of the dose rate for the times that position is exposed to the radiation source.
-The time domain $\mathcal{T}(x)$ is the set of times (in general a disconnected set) when the position $x$ is not blocked by either of the leaves, i.e.,
+The time domain of exposure $\mathcal{T}(x)$ is the set of times (in general a disconnected set) when the position $x$ is not blocked by either of the leaves, i.e.,
 $\mathcal{T}(x)$ is the set of all times $t$ such that $x_L(t) \le x \leq x_R(t)$,
 as illustrated by Figure \ref{fig:administeredDose} .
 
 \begin{equation}
-g(x) = \int_{\mathcal{T}(x)} d(t) dt
+g(x) = \int_{t \in \mathcal{T}(x)} d(t) dt
 \label{eqn:deliveredFluenceDose}
 \end{equation}
 
@@ -144,12 +133,14 @@ that minimize the squared integral error between the target fluence $f(x)$ and t
 
 \input{fig/administeredDose}
 
+%\subsection{Scope of this work}
 
-\section{Method}
+%-- Talk about how we limit scope of main paper to the leaf-trajectory optimization
+%-- briefly discuss why we made this simplification, and how these results might be extended.
 
-In this section we describe the method that we use to convert the mathematical optimization problem from Section \ref{sec:model} into a nonlinear program (NLP) that can be solved using standard NLP solvers such as FMINCON \cite{MatlabOptimizationToolbox2014}, SNOPT \cite{Snopt7}, or IPOPT \cite{Wachter2006}.
+Next we describe the method that we use to convert this mathematical optimization problem into a format that can be solved using standard nonlinear programming (NLP) solvers such as FMINCON \cite{MatlabOptimizationToolbox2014}, SNOPT \cite{Snopt7}, or IPOPT \cite{Wachter2006}.
 
-The first step in this process is to select a discrete representation for the leaf and dose rate trajectories. Here we will use piecewise linear functions. The second step is to compute the integrals in the objective function using methods that are smooth and consistent, a critical step for obtaining good results from the NLP solver.
+The first step in this process is to select a discrete representation for the leaf and dose rate trajectories, for which we use piecewise linear functions. The second step is to compute the integrals in the objective function using methods that are smooth and consistent, a critical step for obtaining good results from the NLP solver.
 
 \subsection{Spline Representation}
 
@@ -162,20 +153,17 @@ There are three continuous functions that must be computed by the optimization: 
   \label{fig:linearSpline}
 \end{figure}
 
-\subsection{Integral Computation with Blocking Function $k()$}
+\subsection{Integral Computation with Blocking Function k()}
 \label{sec:IntegralComputationWithBlockingFunction}
 
-One critical step in evaluating the objective function (Equation \ref{eqn:fluenceMapOptimization}) is to compute an approximation of the delivered fluence $g(x)$, given in Equation \ref{eqn:deliveredFluenceDose}.
-
-There are two numerical issues with computing this integral directly: 
-1) computing the domain $\mathcal{T}$ requires a root solve (or inverting the leaf trajectories), and 2) the domain of $\mathcal{T}$ can change from being simply connected to discontinuous during an optimization. Both of these issues would likely cause convergence failures in the NLP solver, in part by causing a change in the sparsity pattern of the gradient
+There are two issues with computing the integral in Equation \ref{eqn:fluenceMapOptimization} directly: 1) computing the domain $\mathcal{T}(x)$ requires a root solve (or inverting the leaf trajectories), and 2) the domain of $\mathcal{T}(x)$ can change from being simply connected to discontinuous during an optimization. Both of these issues would likely cause convergence failures in the NLP solver, in part by causing a change in the sparsity pattern of the gradient
 (\textit{e.g.} $\tfrac{\partial g}{\partial x_L})$)
 between successive iterations.
 
 Our solution is to rewrite the integral using a blocking function $k(t,x)$, which has a value of one when the leaves at time $t$ are passing radiation at location $x$ and zero when the leaves are blocking radiation. This allows us to rewrite the integral using the constant bounds $[0, T]$:
 
 \begin{equation}
-  g(x) = \int_0^T \! k(t, x) \cdot d(t) \, dt
+  g(x) = \int_{t=0}^T \! k(t, x) \cdot d(t) \, dt
   \label{eqn:fluenceDoseSimpleBounds}
 \end{equation}
 
@@ -183,19 +171,20 @@ We now have a standard scalar integral and we can use any quadrature method to e
 In our case we use the midpoint (rectangle) quadrature rule.
 
 As just defined, our fluence blocking function $k(t,x)$
-would also have a discontinuous gradient, which would cause problems in the optimization.
-Therefore, we use an exponential sigmoid function to approximate the step function
-$s(x, \alpha) = (1 + e^{-x \alpha})^{-1}$, where $\alpha$ is the smoothing parameter. A smaller smoothing parameter will provide a more accurate model, while a larger smoothing parameter will lead to faster optimization.
-
+would also have a discontinuous gradient, which would cause convergence issues in the optimization.
+Therefore, we use an exponential sigmoid function 
+to approximate the step function, where $\alpha$ is the smoothing parameter. 
+\begin{equation}
+  s(x, \alpha) = (1 + e^{-\alpha x})^{-1}
+  \label{eqn:sigmoidEquation}
+\end{equation}
+A small value of alpha corresponds to heavy smoothing and faster convergence in the optimization, while a large value of alpha will provide a more accurate model at the expense of a more difficult optimization.
 We can then combine the smoothing function for each leaf to get the combined blocking function:
-
 \begin{equation}
   k(t, x) \approx \sqrt{s\big(x_R(t) -x, \, \alpha\big) \; \cdot \; s\big(x -x_L(t), \, \alpha\big)}
   \label{eqn:blockingFunction}
 \end{equation}
-
-
-In practice it is useful to define the $\alpha$ parameter in terms of 
+\noindent In practice it is useful to define the $\alpha$ parameter in terms of 
 a smoothing distance $\Delta x$ and 
 the fraction $\gamma$ that the blocking function changed over that distance.
 For example, $\Delta x = 0.05$ cm and $\gamma = 0.98$ means that 
@@ -212,12 +201,11 @@ Figure \ref{fig:visualizeExponentialSmoothing} shows three values of the smoothi
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{fig/FIG_visualize_exponential_smoothing.pdf}
-  \caption{Visualization of smoothing parameters in the blocking function (\ref{eqn:blockingFunction}. The right and left leaves are at $x_R = 1 cm$ and $x_L = -1 cm$ respectively. The solid black line shows the case without smoothing, and the remaining lines show light smoothing ($\Delta = 0.05$ cm), moderate smoothing ($\Delta = 0.2$ cm), and heavy smoothing($\Delta = 0.5$ cm). In each of these three cases we use a value of $\gamma = 0.95$.}
+  \caption{Visualization of smoothing parameters in the blocking function (\ref{eqn:blockingFunction}. The right and left leaves are at $x_R = 1$ cm and $x_L = -1$ cm respectively. The solid black line shows the case without smoothing, and the remaining lines show light smoothing ($\Delta = 0.05$ cm), moderate smoothing ($\Delta = 0.2$ cm), and heavy smoothing $\Delta = 0.5$ cm). In each of these three cases we use a value of $\gamma = 0.95$.}
   \label{fig:visualizeExponentialSmoothing}
 \end{figure}
 
-
-\subsection{Objective Function}
+%\subsection{Objective Function}
 
 The objective function for the inner optimization (computing leaf trajectories)
 is the integral of the error-squared between the desired fluence $f(x)$ and the fluence that
@@ -246,14 +234,7 @@ This optimization is solved as a nonlinear program.
 
 We model the leaf trajectories as piecewise-linear functions of time,
 where the decision variables in the optimization are the position of each leaf
-at the knot points in the spline: $x_{L, k}$, $x_{L, k}$, as shown in Figure \ref{fig:linearSpline}.
-
-We can compute the position on each segment by linear interpolation between the knot points.
-
-The position of each leaf is linear over a single segment, thus the velocity of the leaf on that segment is constant,
-with a change in value at each knot point.
-The velocity for each segment is:
-
+at the knot points in the spline: $x_{L, k}$, $x_{L, k}$, as shown in Figure \ref{fig:linearSpline}. We compute the position on each segment by linear interpolation between the knot points. The velocity of the leaf on each segment is constant and is given by:
 \begin{equation}
   \dot{x}_{L, k} = \frac{x_{L, k+1} - x_{L, k}}{h_k}
   \quad \quad
@@ -292,43 +273,36 @@ which is done as described in Section \S~\ref{sec:IntegralComputationWithBlockin
 
 \subsection{Iterative refinement of smoothing parameter}
 
-In practice, the leaf trajectory optimization runs well 
-when the smoothing distance $\gamma$ is large.
-As the smoothing becomes smaller, the optimization becomes more difficult to solve,
-but the model is more accurate.
+The performance of the optimization, based on solve-time and accuracy, is highly dependent on the value of the smoothing parameter $\alpha$. With heavy smoothing the optimization will quickly converge to a \quotes{good} solution, but the smoothing distorts the objective function to the point where it is innacurate. Conversely, with light smoothing (or no smoothing) the gradients in the optimization change quickly and the solver easily gets stuck in local minima and sometimes fails to converge.
 
-We can use these properties to our advantage by iteratively solving the optimization problem.
-On the first iteration we use a large value for the smoothing parameter,
-which will quickly find a good approximation of the solution.
-On subsequent iterations we use the solution from the previous optimization as the initial guess,
-and then reduce the smoothing parameter until we achieve the desired model accuracy.
-
-This process is effective at avoiding local minima because
-the optimization with heavy smoothing inherently focuses on the global aspects of the problem.
-Subsequent optimizations are similar, so the previous solution is an excellent guess,
-and the optimization is able to simply refine that solution for the more accurate model.
-
-\todo{Talk about measuring fitting using both smooth and "exact" fluence calculation.}
+This dependency on smoothing is common in trajectory optimization, and there is a well known solution: iterative refinement. The idea is to initially solve the optimization using heavy smoothing, which gives a solution that is somewhat close to the true optimal solution. Then the optimization is solved again, using the previous solution as the initial guess and with a smaller value of the smoothing parameter. This process is continued until the error in the objective function decreases to an acceptable level \cite{Srinivasan2006}.
 
 \section{Results}
 
 \subsection{Smoothing Parameter iteration schedule}
 
+One of the key parameters in the optimization is the smoothing parameter $\alpha$, which we compute here using equation (\ref{eqn:SmoothingDistanceParameter}), using a characteristic smoothing width $\Delta x$ and a parameter $\gamma$ that describes how much the blocking function changes over that smoothing width. 
+
+For this experiment we set a constant $\gamma = 0.95$ and then study three values for the ``smoothing distance'' $\Delta x = \{0.5, 0.2, 0.05\}$ cm. We compute the optimal leaf trajectory pair for two example fluence profiles, one with a unimodal structure and one with a bimodal structure (see Figures \ref{fig:smoothingParamSweep_unimodalTraj} and \ref{fig:smoothingParamSweep_bimodalTraj}). In each case we use $n=6$ grid points on the leaf trajectories.
+
+We explore each possible sequence of smoothing iterations for these three parameters. In general, it would be possible to automate this refinement, but simply starting heavy smoothing and then decreasing the smoothing on successive iterations until a desired accuracy is achieved.
+
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{fig/FIG_smoothingParamSweep_pareto.pdf}
-  \caption{TODO:}
+  \caption{Comparison of the optimization for two different fluence profiles (See Figures \ref{fig:smoothingParamSweep_unimodalTraj} and \ref{fig:smoothingParamSweep_bimodalTraj}) for a variety of smoothing parameter iteration schedules. The resulting solutions are evaluated based on CPU time and objective value: fitting error computed without smoothing.}
   \label{fig:smoothingParamSweep_pareto}
 \end{figure}
 
 
 \subsection{Leaf trajectory plots for two examples}
 
+In the previous section we showed a comparison of the objective function values for various smoothing schedule. Here we select a single smoothing schedule ($\Delta = 0.5 \to 0.2$) and show the optimal leaf trajectories for both the unimodal and bimodal examples.
 
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{fig/FIG_smoothingParamSweep_unimodalTraj.pdf}
-  \caption{TODO:}
+  \caption{The optimal leaf trajectories for the unimodal example problem, computed using the smoothing schedule ($\Delta = 0.5 \to 0.2$). The right plot shows the leaf trajectories, and the left plot shows the target and delivered fluence for a constant dose rate.}
   \label{fig:smoothingParamSweep_unimodalTraj}
 \end{figure}
 
@@ -336,70 +310,91 @@ and the optimization is able to simply refine that solution for the more accurat
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{fig/FIG_smoothingParamSweep_bimodalTraj.pdf}
-  \caption{TODO:}
+  \caption{The optimal leaf trajectories for the bimodal example problem, computed using the smoothing schedule ($\Delta = 0.5 \to 0.2$). The right plot shows the leaf trajectories, and the left plot shows the target and delivered fluence for a constant dose rate.}
   \label{fig:smoothingParamSweep_bimodalTraj}
 \end{figure}
 
+\subsection{Objective function value during the optimization}
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{fig/CPUvsObj_Pr-2-row11-bi_Smooth-05-02.pdf}
+  \caption{Relation between CPU time and the best known smoothed objective value and the corresponding exact objective value, for the parameter scheme ($\Delta x= 0.5 \to 0.2$) and the unimodal fluence profile (see Figure \ref{fig:smoothingParamSweep_unimodalTraj})}
+  \label{fig:CPUvsObj_bestalpha_uni}
+\end{figure}
+
+\subsection{Objective function value during the optimization}
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{fig/CPUvsObj_Pr-2-row11-bi_Smooth-05-02.pdf}
+  \caption{Relation between CPU time and the best known smoothed objective value and the corresponding exact objective value, for the parameter scheme ($\Delta x= 0.5 \to 0.2$) and the bimodal fluence profile (see Figure \ref{fig:smoothingParamSweep_bimodalTraj})}
+  \label{fig:CPUvsObj_bestalpha_bi}
+\end{figure}
+
+\todo{All: finetune figures}
+\todo{Koos: explain/interpret figures}
 
 \section{Discussion and conclusions}
 
-\subsection{Choice of smoothing parameter}
-- related to how close (on average) the leaves are apart. If far apart, then smoothing is less important. If very close, then smoothing terms dominate.
+\subsection{Smoothing schedule}
 
-\subsection{Effect of smoothing on convergence and accuracy}
+The various smoothing schedules can be analyzed on a pareto front, with a trade-off between CPU time and the value of the objective function. Heavy smoothing (large $\Delta$) results in fast optimization but poor fitting. Light smoothing results in slow optimization as well as poor fitting. The best solutions were obtained by starting with heavy smoothing and then moving to moderate smoothing. These solutions required a moderate amount of CPU time but tended to be more accurate than other methods.
 
-if heavy smoothing, then inaccurate model
+\subsection{Smoothed vs Exact objective function}
 
-if light smoothing, then gradients are bad and optimization gets stuck
+In all of the optimizations we used a smooth objective function for the optimization, but also track the performance of the ``true'' objective function (no smoothing). For heavy smoothing there is a significant difference between the two, but with light smoothing the difference is negligible.
 
-can benchmark against "truth" model easily during the optimization.
+\todo{Koos: discuss your plot for obj. val. vs time here?}
+\KvAcomment{Matthew: I think these plots better fit in the previous section. We could directly discuss the figures there.}
+
+\subsection{Fitting performance}
+
+For simple fluence target profiles we were typically able to obtain the desired fluence profile to within the accuracy of our model. For more complex profiles, such as the bimodel profile shown in the figure \ref{fig:smoothingParamSweep_bimodalTraj}, the fluence target was matched reasonably well, with some small fitting errors near sharp changes in the profile. These errors are in part due to using a small number of linear segments to represetn the leaf trajectories.
+
+\subsection{Choice of grid-point count}
+
+All of the experiments in this report used six grid-points (five segments) for the leaf trajectories. This number was chosen using a pilot study. If fewer grid-points were used, then the ability to fit arbitrary profiles was diminished. If more grid-points were used then there was a minor improvement in fitting, but a significant increase in computational time and it was more difficult to find a viable smoothing schedule.
+
+\subsection{monotonic vs non-monotonic leaf trajectories.}
+
+\todo{David: thoughts on discussing non-montonic leaf trajectories?}
+
 
 \subsection{How long should the duration of the trajectory be?}
 
-\subsection{How to optimize the dose-rate trajectory?}
+The duration of the trajectory is another important parameter when computing the optimal set of leaf trajectories. For this report we will consider it fixed, assuming that it is computed by some outer optimization loop, along with the dose-rate trajectory.
+\KvAcomment{Let's discuss several delivery times, at least in the appendix when also discussing the outer (dose rate space search) loop. Also, even then, we would have to manually pick values for $T$.}
 
 \subsection{Why first-order splines to represent trajectories?}
 \label{sec:WhyUseLinearSplines}
 
-In this section we informally discuss some of the design choices that were made when creating this
-trajectory-based method for solving leaf and dose rate trajectories for fluence mapping.
+There are many choices for representing trajectories, most of which can be classified as a type of polynomial spline. There is a fundamental trade-off in polynomial splines: for a given amount of data you can store many low-order segments or few high-order segments. Selecting the correct trade-off is discussed in detail in \cite{kelly2017introduction}, \cite{Betts2010}, \cite{Darby2011a}. 
 
-\todo{This section should be edited to reduce length and needs some detailed citations.}
+In this paper we use a linear spline: many low-order segments rather than few high-order segments. One reason for this choice is that we can precisely enforce velocity constraints without the need for mesh refinement or other expensive checks. The low order spline also lends itself to fast and simple calculations. Finally, our model is not accurate enough to necessitate the complexity associated with higher-order methods.
 
-There are many ways to represent trajectories, and nearly all of them have associated transcription (optimization) methods.
-In general there is one major trade-off:
-use a larger number of low-order segments or
-use a smaller number of high-order segments.
+We performed a brief pilot study, where we compared linear to cubic splines, with the same number of decision variables in the optimization. We found that the linear splines resulted in faster optimization for a comparable accuracy and dramatically simplified the resulting optimization code.
 
-Selecting the correct method order typically comes down to problem specifics.
-High-order methods are best when the system model is good and high accuracy is important.
-The accuracy of these methods relies on the underlying problem being smooth over each
-mesh interval, with few places where path constraints serve to shape the trajectory.
-Low-order methods are best when the trajectory shape is dominated by path constraints and
-high accuracy is not critical.
-\todo{Cite my tutorial paper? Check if I discuss this in detail.
-Also see if it is discussed in the reviews by Rao or Betts.}
 
-Although our specific problem does not have path constraints, it does have a highly nonlinear objective function.
-The smooth leaf-blocking model causes a strong nonlinearity in the objective function,
-which would make careful mesh refinement necessary if high-order methods were used.
-\todo{Cite GPOPS-II paper? Or perhaps Rao or Betts tutorial paper.}
-We can avoid the need for careful mesh refinement by simply using a low-order model,
-which also makes it easier to precisely handle the velocity and position limits on the leaf trajectories.
+\section{Conclusions}
 
-We did a few brief checks, comparing a few different schemes using cubic splines and compared them
-to the linear spline presented in this paper. Although both methods worked, the linear spline methods
-were much faster and were able to provide an good fit to the desired fluence profile.
-One possible reason for the speed increase is that a set of three linear segments have less
-coupling terms than a cubic spline fitting the same trajectory domain. The resulting sparsity in the
-jacobian (derivative of the objective function) helps optimization. \cite{Betts2010}
+\todo{once we get the rest of the paper written}
 
-The major drawback of a linear spline for leaf trajectories is that the resulting trajectory tends
-to be less smooth, with a step change in velocity between each segment. This effect can be minimized
-by using a large number of linear segments. In some cases this can lead to a slight numerical
-instability, which is easily addressed by adding a small regularization term to the optimization,
-minimizing the integral of the velocity-squared along the trajectory.
+\section{Future Work}
 
+The next steps for this project are include this leaf-trajectory optimization as the inner loop in some larger optimization that computes the optimal dose rate and trajectory duration.
+
+\todo{Add more detail here}
+
+
+\appendix
+
+\section{Comparison to Existing methods}
+
+\todo{Koos  --  maybe put some of those fancy Tikz figures with the heat maps in here?}
+
+\section{Computing dose rate trajectories and total time}
+\label{CMAES}
+
+\todo{Koos --  pull in old CMAES stuff?}
 
 \bibliographystyle{unsrt}
 \bibliography{all}

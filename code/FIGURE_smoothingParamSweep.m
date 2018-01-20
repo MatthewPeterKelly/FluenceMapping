@@ -13,8 +13,7 @@ dataFun = @getCortData;  %{@getCortData, @getSimData}
 duration = 9;  % duration of the leaf trajectories
 nGrid = 6; % number of grid points in the leaf trajectories
 dataSetNames = {'unimodal','bimodal'};
-alphaVec = [0.5, 0.2, 0.05];  % smoothing width, centimeters
-alphaName = {'light','moderate','heavy'};
+smoothingWidthVec = [0.5, 0.2, 0.05];  % smoothing width, centimeters
 iterSchedule = {...  % schedule of smoothing to compute
     1, 2, 3, ...
     [1,2], [1,3], [2,3],...
@@ -56,7 +55,7 @@ for iDataSet = 1:nDataSet
     
     for iIterSch = 1:nIterSch
         % Final parameter setup:
-        param.smooth.leafBlockingWidth = alphaVec(iterSchedule{iIterSch});
+        param.smooth.leafBlockingWidth = smoothingWidthVec(iterSchedule{iIterSch});
         
         % Solve the optimization!
         results{iDataSet, iIterSch} = fitLeafTrajectoriesIter(dose, guess, target, param);
@@ -89,8 +88,8 @@ end
 % Compile the legend:
 legendText = cell(nIterSch, 1);
 for iIterSch=1:nIterSch
-    str = '\gamma =';
-    vals = alphaVec(iterSchedule{iIterSch});
+    str = '\DeltaX =';
+    vals = smoothingWidthVec(iterSchedule{iIterSch});
     for i=1:length(vals)
         if i==1
             str = [str, ' ', num2str(vals(i))];  %#ok<*AGROW>
