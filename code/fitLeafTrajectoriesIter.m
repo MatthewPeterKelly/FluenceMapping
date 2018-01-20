@@ -26,7 +26,7 @@ widthList = param.smooth.leafBlockingWidth;
 
 param.smooth.leafBlockingWidth = widthList(1);
 soln(1) = fitLeafTrajectories(dose, guess, target, param);
-if soln(1).exitFlag < 0  % Then optimization failed. Abort.
+if soln(1).exitFlag < -1  % Then optimization failed. Abort.
     soln = NaN;
     return;
 end
@@ -37,7 +37,7 @@ for iter = 2:length(widthList)
     guess.xLow = soln(iter-1).traj.xLow;
     guess.xUpp = soln(iter-1).traj.xUpp;
     soln(iter) = fitLeafTrajectories(dose, guess, target, param); %#ok<*AGROW>
-    if soln(iter).exitFlag < 0  % Then optimization failed. Abort.
+    if soln(iter).exitFlag < -1  % Then optimization failed. Abort.
         soln = NaN;
         return;
     end

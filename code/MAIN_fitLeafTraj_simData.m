@@ -30,6 +30,10 @@ param.fmincon = optimset(...
     'Display', 'iter',...
     'TolFun', 1e-3);
 
+% Diagnostics parameters
+param.diagnostics.nQuad = 10*param.nQuad;
+param.diagnostics.alpha = getExpSmoothingParam(0.999, 0.001);
+
 % Arbitrary dose trajectory for testing:
 doseProfile.tGrid = linspace(tBnd(1), tBnd(2), 5);
 doseProfile.fGrid = 1.0*[1, 1.8, 2.5, 1.8, 1.9];

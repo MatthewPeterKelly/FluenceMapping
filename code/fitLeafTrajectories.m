@@ -19,10 +19,16 @@ function soln = fitLeafTrajectories(dose, guess, target, param)
 %   param.guess.defaultLeafSpaceFraction = 0.25;
 %   param.fmincon = optimset('fmincon') = options to pass to fmincon
 global CPU_TIMES OBJ_VALUE OBJ_EXACT ITER_COUNT
+global BEST_EVER_OBJ BEST_EVER_IDX BEST_EVER_DEC_VAR
+global DIAGNOSTIC_TIME
 CPU_TIMES = zeros(1000,1);
 OBJ_VALUE = zeros(1000,1);
 OBJ_EXACT = zeros(1000,1);
 ITER_COUNT = 0;
+BEST_EVER_OBJ = inf;
+BEST_EVER_IDX = 0;
+BEST_EVER_DEC_VAR = [];
+DIAGNOSTIC_TIME = 0;  % How long we spend checking the exact objective function value
 
 xBnd = param.limits.position;
 vBnd = param.limits.velocity;
@@ -100,7 +106,16 @@ problem.options = param.fmincon;
 % solve:
 startTime = tic;
 [zSoln, fSoln, exitFlag] = fmincon(problem);
-nlpTime = toc(startTime);
+solveTime = toc(startTime);  % time spent in during the solve
+nlpTime = solveTime - DIAGNOSTIC_TIME;  % time spent in fmincon
+if isfield(param, 'diagnostics')
+    % Use the best-ever solution
+    fSoln = BEST_EVER_OBJ;
+    zSoln = BEST_EVER_DEC_VAR;
+    % Compute the fluence using the (nearly) exact model:
+    nQuad = param.diagnostics.nQuad;
+    alpha = param.diagnostics.alpha;
+end
 [xLow, xUpp] = unpackDecVars(zSoln);
 target.fSoln = getFluence(target.xGrid, dose.tGrid, xLow, xUpp, dose.rGrid, alpha, nQuad);
 
@@ -109,6 +124,7 @@ soln.traj.xLow = xLow;
 soln.traj.xUpp = xUpp;
 soln.obj = fSoln;
 soln.exitFlag = exitFlag;
+soln.solveTime = solveTime;
 soln.nlpTime = nlpTime;
 soln.problem = problem;
 soln.traj.time = dose.tGrid;
@@ -133,7 +149,6 @@ xLow = z(idx)';
 idx = idx(end) + (1:nGrid);
 xUpp = z(idx)';
 
-
 end
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
@@ -154,7 +169,10 @@ function stop = fluenceFittingObjectiveExact(zGuess, objVal, dose, target, param
 % estimate of the fluence that would be delivered by the exact model.
 %
 global CPU_TIMES OBJ_VALUE OBJ_EXACT ITER_COUNT
+global BEST_EVER_OBJ BEST_EVER_IDX BEST_EVER_DEC_VAR
+global DIAGNOSTIC_TIME
 
+diagnosticTimeStart = tic();
 param.nQuad = param.diagnostics.nQuad;
 param.smooth.leafBlockingAlpha = param.diagnostics.alpha;
 objExact = fluenceFittingObjective(zGuess, dose, target, param);
@@ -164,8 +182,18 @@ ITER_COUNT = ITER_COUNT + 1;
 CPU_TIMES(ITER_COUNT) = toc(timer);
 OBJ_VALUE(ITER_COUNT) = objVal.fval;
 OBJ_EXACT(ITER_COUNT) = objExact;
-stop = false;
 
+% Record the best-ever solution:
+if objExact < BEST_EVER_OBJ
+   BEST_EVER_OBJ =  objExact;
+   BEST_EVER_IDX = ITER_COUNT;
+   BEST_EVER_DEC_VAR = zGuess;
+end
+
+% Decide if we should abort (check convergence to true obj. val)
+idxFail = 1.5 * BEST_EVER_IDX + 25;  % heuristic!!
+stop = ITER_COUNT > idxFail;
+DIAGNOSTIC_TIME = DIAGNOSTIC_TIME + toc(diagnosticTimeStart);
 end
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
