@@ -31,13 +31,13 @@ for j = 2 : m
 end
 
 % Specify line colors, styles and names for legend and plotting
-myLine(1).name = 'ObjVal (smoothed)';
+myLine(1).name = 'Smooth Obj. Val. ';
 myLine(1).color = 'b';
 myLine(1).style = '-';
-myLine(2).name = 'ObjVal (exact)';
+myLine(2).name = 'Exact Obj. Val. ';
 myLine(2).color = 'r';
 myLine(2).style = '-';
-myLine(3).name = 'ObjVal (last exact)';
+myLine(3).name = 'Last Exact Obj. Val.';
 myLine(3).color = 'g';
 myLine(3).style = ':';
 myLine(4).name = 'Smoothing value transition';
@@ -119,7 +119,7 @@ for j = 1 : m % steps in smoothing scheme
         line([D.cpuTime(end),D2.cpuTime(1)],[D.objExact(end),D2.objExact(1)],'Color',myLine(2).color,'LineStyle',myLine(2).style) % exact (same)
     end
     
-    % Store largest values for figure sizing
+    % Store extreme values for figure sizing
     maxyj(j) = max([D.objVal(isfinite(D.objVal)) ;D.objExact(isfinite(D.objExact))]); 
 end
 
@@ -149,8 +149,8 @@ else
 end
 maxx = xMarginScale * (R(m).diagnostics.cpuTime(end));
 maxy = yMarginScale * max(maxyj);
-xlim([0,maxx]);
-ylim([0,maxy]);
+myAxes.XLim = [0,maxx];
+myAxes.YLim(2) = maxy;
 
 % Grid
 myAxes.GridAlpha = 0.25;
