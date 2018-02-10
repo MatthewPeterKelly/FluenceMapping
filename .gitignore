@@ -7,3 +7,7 @@
 
 # CMAES stuff:
 **/*cmaes*.*
+
+# Compressed files:
+**/*.tar.gz
+**/*.zip
