@@ -10,7 +10,7 @@ clc; clear;
 dataFun = @getCortData;  %{@getCortData, @getSimData}
 
 % Parameters for experiment:
-duration = 9;  % duration of the leaf trajectories
+duration = 5;  % duration of the leaf trajectories
 nGrid = 6; % number of grid points in the leaf trajectories
 dataSetNames = {'unimodal','bimodal'};
 smoothingWidthVec = [0.5, 0.2, 0.05];  % smoothing width, centimeters
@@ -118,7 +118,7 @@ subplot(1,3,3);
 bar(Result.cpuTime)
 title('CPU time')
 set(gca,'XTickLabel',dataSetNames)
-legend(legendText,'Location','SouthEast');
+legend(legendText,'Location','best');
 setFigureSize('wide')
 save2pdf('FIG_smoothingParamSweep_barChart.pdf')
 linkaxes(hSub,'y');
