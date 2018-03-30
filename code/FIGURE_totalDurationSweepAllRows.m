@@ -6,8 +6,18 @@ clc; clear;
 
 %%  Generate the results
 
+dataNames = {'unimodal', 'bimodal'};
+
+for iDataName = 1:length(dataNames)
+    dataName = dataNames{iDataName};
+
 % Select the rows to solve:
+if strcmp(dataName,'unimodal')
 solveRows = 1:15;
+else
+solveRows = 1:13;
+end
+    
 nDataRows = length(solveRows);
 dataSetNames = cell(length(solveRows), 1);
 for iRow = 1:nDataRows
@@ -40,8 +50,8 @@ results = cell(nDataSet, nDuration);
 for iDataSet = 1:nDataSet
     
     % Load the data set:
-    fprintf('Solving: %s\n', dataSetNames{iDataSet});
-    data = getCortDataFullMap(solveRows(iDataSet));
+    fprintf('Solving: %s -- %s\n', dataName, dataSetNames{iDataSet});
+    data = getCortDataFullMap(solveRows(iDataSet), dataName);
     
     % Set up the target structure:
     target.xGrid = data.x;
@@ -67,10 +77,9 @@ for iDataSet = 1:nDataSet
     end
 end
 
-save('totalDurationSweepAllRows.mat');
+save(['totalDurationSweepAllRows_' dataName '.mat']);
 
-%% Basic post-processing of the results:
-
+end
 
 
 
