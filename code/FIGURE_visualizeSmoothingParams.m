@@ -11,9 +11,9 @@ frac = 0.95;  % /gamma
 
 widthVec = [0.05, 0.2, 0.5];    % /Delta x
 legendNames = {'no smoothing', ...
-               ['\Delta x = ' num2str(widthVec(1))],...
-               ['\Delta x = ' num2str(widthVec(2))],...
-               ['\Delta x = ' num2str(widthVec(3))]};            
+               ['$\Delta x$ = ' num2str(widthVec(1)) ' cm'],...
+               ['$\Delta x$ = ' num2str(widthVec(2)) ' cm'],...
+               ['$\Delta x$ = ' num2str(widthVec(3)) ' cm']};            
                
 x = linspace(xBnd(1), xBnd(2), 250);
 
@@ -29,8 +29,9 @@ for i = 1:length(widthVec)
    k = sqrt(yLow .* yUpp);
    plot(x, k, 'LineWidth', 2)
 end
-legend(legendNames);
-
+legend(legendNames, 'Interpreter','latex');
+xlabel('leaf position $x$ (cm)', 'Interpreter','latex')
+ylabel('pass-through fraction $k(t,x)$','Interpreter','latex')
 
 save2pdf('FIG_visualize_exponential_smoothing.pdf');
 

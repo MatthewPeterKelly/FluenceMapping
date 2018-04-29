@@ -13,9 +13,9 @@ dataFun = @getCortData;  %{@getCortData, @getSimData}
 duration = 5;  % duration of the leaf trajectories
 nGrid = 6; % number of grid points in the leaf trajectories
 dataSetNames = {'unimodal','bimodal'};
-smoothingWidthVec = [0.5, 0.2, 0.05];  % smoothing width, centimeters
+smoothingWidthVec = [0.5, 0.2, 0.05, 0.002];  % smoothing width, centimeters
 iterSchedule = {...  % schedule of smoothing to compute
-    1, 2, 3, ...
+    1, 2, 3, 4,...
     [1,2], [1,3], [2,3],...
     [1,2,3]};
 
@@ -100,46 +100,64 @@ for iIterSch=1:nIterSch
     legendText{iIterSch} = str;
 end
 
-% Generate a simple figure with bar charts
-figure(2342); clf;
-hSub(1) = subplot(1,3,1);
-bar(Result.objVal);
-title('Obj. Val. Smooth')
-set(gca,'XTickLabel',dataSetNames)
-set(gca,'YScale','log')
-legend(legendText,'Location','SouthEast');
-hSub(2) = subplot(1,3,2);
-bar(Result.objExact);
-title('Obj. Val. Exact')
-set(gca,'XTickLabel',dataSetNames)
-set(gca,'YScale','log')
-legend(legendText,'Location','SouthEast');
-subplot(1,3,3);
-bar(Result.cpuTime)
-title('CPU time')
-set(gca,'XTickLabel',dataSetNames)
-legend(legendText,'Location','best');
-setFigureSize('wide')
-save2pdf('FIG_smoothingParamSweep_barChart.pdf')
-linkaxes(hSub,'y');
+% % Generate a simple figure with bar charts
+% figure(2342); clf;
+% hSub(1) = subplot(1,3,1);
+% bar(Result.objVal);
+% title('Obj. Val. Smooth')
+% set(gca,'XTickLabel',dataSetNames)
+% set(gca,'YScale','log')
+% legend(legendText,'Location','SouthEast');
+% hSub(2) = subplot(1,3,2);
+% bar(Result.objExact);
+% title('Obj. Val. Exact')
+% set(gca,'XTickLabel',dataSetNames)
+% set(gca,'YScale','log')
+% legend(legendText,'Location','SouthEast');
+% subplot(1,3,3);
+% bar(Result.cpuTime)
+% title('CPU time')
+% set(gca,'XTickLabel',dataSetNames)
+% legend(legendText,'Location','best');
+% setFigureSize('wide')
+% save2pdf('FIG_smoothingParamSweep_barChart.pdf')
+% linkaxes(hSub,'y');
 
-% Create a pareto-front chart:
-figure(2253); clf;
+% % Create a pareto-front chart:
+% figure(2253); clf;
+% for iDataSet = 1:nDataSet
+%     hSub(iDataSet) = subplot(1,nDataSet,iDataSet); hold on;
+%     for iIterSch=1:nIterSch
+%         plot(Result.cpuTime(iDataSet,iIterSch), Result.objExact(iDataSet,iIterSch),...
+%             'o','MarkerSize',8,'LineWidth',4);
+%     end
+%     legend(legendText,'Location','best');
+%     xlabel('CPU time (s)');
+%     ylabel('Objective Value (no smoothing)')
+%     title(dataSetNames{iDataSet});
+%     set(gca,'YScale','log')
+% end
+% linkaxes(hSub, 'y');
+% setFigureSize('wide')
+% save2pdf('FIG_smoothingParamSweep_pareto.pdf')
+
+
+% Create a pareto-front chart as independent figures:
+colors = parula(nIterSch);
 for iDataSet = 1:nDataSet
-    hSub(iDataSet) = subplot(1,nDataSet,iDataSet); hold on;
-    for iIterSch=1:nIterSch
-        plot(Result.cpuTime(iDataSet,iIterSch), Result.objExact(iDataSet,iIterSch),...
-            'o','MarkerSize',8,'LineWidth',4);
-    end
-    legend(legendText,'Location','best');
-    xlabel('CPU time (s)');
-    ylabel('Objective Value (no smoothing)')
-    title(dataSetNames{iDataSet});
-    set(gca,'YScale','log')
+    hSub(iDataSet) = figure(2000 + iDataSet); %clf; hold on;
+%     for iIterSch=1:nIterSch
+%         plot(Result.cpuTime(iDataSet,iIterSch), Result.objExact(iDataSet,iIterSch),...
+%             'o','MarkerSize',8,'LineWidth',4,'Color', colors(iIterSch,:));
+%     end
+%     legend(legendText,'Location','best');
+%     xlabel('CPU time (s)');
+%     ylabel('Objective Value (no smoothing)')
+%     title(dataSetNames{iDataSet});
+%     set(gca,'YScale','log')
+    setFigureSize('square');
+    save2pdf(['FIG_smoothingParamSweep_pareto_', num2str(iDataSet), '.pdf'])
 end
-linkaxes(hSub, 'y');
-setFigureSize('wide')
-save2pdf('FIG_smoothingParamSweep_pareto.pdf')
 
 
 %% Plot the best of the solutions:

@@ -23,7 +23,7 @@ rawData = [...
     0         0         0         0         0         0    4.3102    9.6847   14.5618   14.9369   13.1539   11.8256   10.7831;
     0         0         0         0         0    5.6051    5.9040    7.8643   11.5380   11.8454   10.1696    9.4062         0];
 
-if strcmp(name, 'bimodel')
+if strcmp(name, 'bimodal')
    rawData = rawData'; 
 end
 
