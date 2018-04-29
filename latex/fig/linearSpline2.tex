@@ -1,0 +1,55 @@
+% KvA: Example Figure, didn't care too much about efficiency
+
+\begin{figure}[htp]
+\centering
+\begin{tikzpicture}
+    \begin{axis}[
+        xmin=0, xmax=6.0,
+        ymin=0, ymax=2.4,
+        axis x line = bottom,
+        axis y line = left,
+        enlargelimits = {abs=0.2},
+        axis line style = {-Latex[round]},
+        ytick = \empty,
+        xtick = \empty,
+        ylabel = {value},
+        xlabel = {time},
+        axis equal image
+        ]
+        
+    \addplot[   thick,
+        color=black,
+        solid,
+        mark=o,
+        mark size=3,
+        mark options={solid},
+        visualization depends on=\thisrow{alignment} \as \alignment,
+        nodes near coords, % Place nodes near each coordinate
+        point meta=explicit symbolic, % The meta data used in the nodes is not explicitly provided and not numeric
+        every node near coord/.style={yshift=\alignment, anchor=north} % Align each coordinate at the anchor 40 degrees clockwise from the right edge
+        ] table [% Provide data as a table
+            meta index=2 % the meta data is found in the third column
+        ] {
+        x       y       label       alignment
+        0.5     0.45    $(t_0,x_0)$       -1
+        1.5     1.25    $(t_1,x_1)$       -9
+        2.5     1.75    $(t_2,x_2)$       -8
+        3.5     1.0     $(t_3,x_3)$       -3
+        4.5     0.8     $(t_4,x_4)$       -3
+        5.5     1.4     $(t_5,x_5)$       -6
+        };
+
+        \node at (2.5,1.75) (knot) {};
+        \node[anchor=west] at (3.5,2.25) (description) {knot point};
+        \draw[color=gray, thick] (description) edge[out=180,in=45,-latex] (knot);
+
+    \end{axis}
+\end{tikzpicture}
+    
+    
+\caption[Linear Spline]{ 
+    Dose rate and leaf position trajectories are represented using linear splines.  
+    A linear spline is fully defined by its values at the knot points. 
+}
+\label{fig:linearSpline}
+\end{figure}

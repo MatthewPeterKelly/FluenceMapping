@@ -27,7 +27,7 @@
 % Graphics & Float packages
 \usepackage{float}
 \usepackage{graphicx}
-%\usepackage{subfigure}
+\usepackage{caption,subcaption}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat=newest}
@@ -77,7 +77,7 @@ top=20mm,
 \ead{dcraft@mgh.harvard.edu}
 
 \begin{abstract}
-  Within the setting of intensity modulated radiation therapy (IMRT), and the fully continuous version of IMRT called volumetric modulated radiation therapy (VMAT), we consider the problem of matching a given fluence map as well as possible in limited time by the use of a multi-leaf collimator (MLC). We introduce two modeling strategies to manage the nonconvexity and the associated local minima of this problem. The first is the use of linear splines to model the MLC leaf positions and the dose rate as functions of time. The second is a progressively controllable smooth model (instead of a step function) of how the leaves block the fluence radiation. We solve the problem in two parts: an outer loop that optimizes the dose rate pattern over time, and an inner loop that, given a fixed dose rate pattern, optimizes the leaf trajectories.
+  Within the setting of intensity modulated radiation therapy (IMRT) and the fully continuous version of IMRT called volumetric modulated radiation therapy (VMAT), we consider the problem of matching a given fluence map as well as possible in limited time by the use of a multi-leaf collimator (MLC). We introduce two modeling strategies to manage the nonconvexity and the associated local minima of this problem. The first is the use of linear splines to model the MLC leaf positions and the dose rate as functions of time. The second is a progressively controllable smooth model (instead of a step function) of how the leaves block the fluence radiation. We solve the problem in two parts: an outer loop that optimizes the dose rate pattern over time, and an inner loop that, given a fixed dose rate pattern, optimizes the leaf trajectories.
 \end{abstract}
 
 \section{Introduction}
@@ -100,8 +100,7 @@ They constructed the trade-off curve between delivery time and fluence map match
 % for several leaf trajectories independently
 For a given fluence map and fixed delivery time, the challenge of optimizing the leaf trajectories and dose rate versus time so that the given fluence map is matched as accurately as possible, subject to machine restrictions, presents a high dimensional nonconvex optimization problem.
 The nonconvexity of the fluence map matching problem leads to a large number of local minima.
-For a thorough introduction to the complexities of dynamic fluence map delivery (which generally arises in the context of dynamic IMRT and VMAT),
- see \cite{balvertcraft} and \cite{unkvmatreview}.
+For a thorough introduction to the complexities of dynamic fluence map delivery (which generally arises in the context of dynamic IMRT and VMAT), see \cite{balvertcraft} and \cite{unkvmatreview}.
 
 \section{Methods}
 \label{sec:model}
@@ -110,7 +109,7 @@ Our starting point is a fluence map $m$ that has been optimized, along with addi
 
 We assume the fluence map $m$ is given as a matrix where the rows correspond to the individual left and right leaf pairs, and the columns are the discretely optimized fluence bixels across the field, which can be as finely discretized as one wishes. Typical length scales are on the order of 0.5 cm for both the row height of the MLC leaves and the across-the-row discretization.
 
-Let $x^i_L(t)$ and $x^i_R(t)$ denote the leaf position of the $i$th left and right leaves respectively, at time $t$. Our framework puts the dose rate optimization in an outer loop. Once the outer loop sets a dose rate over time profile, the leaf rows can be optimized independently (neglecting the small coupling terms created by the tongue-and-groove mechanism on the real machine, see \cite{unkvmatreview}), so for the remainder of the algorithm development, we consider only a single leaf row. Let $f(x)$ be the target fluence that should be delivered for that row. Note if $f$ is obtained from an optimized fluence map $m$ is is piecewise constant, but in general $f$ can also be smooth. We assume the total allowed treatment delivery time $T$ is given. Our goal is then to compute the dose rate $d(t)$ (outer loop) and the leaf trajectories $x_L(t)$ and $x_R(t)$ (inner loop) to recreate the fluence row $f(x)$ as best as possible, while accounting for maximum leaf speed, maximum dose rate, and collision constraints. We chose to focus on the leaf trajectory optimization in this report; the outer loop dose rate search is described in \ref{CMAES}.
+Let $x^i_L(t)$ and $x^i_R(t)$ denote the leaf position of the $i$th left and right leaves respectively, at time $t$. Our framework puts the dose rate optimization in an outer loop. Once the outer loop sets a dose rate over time profile, the leaf rows can be optimized independently (neglecting the small coupling terms created by the tongue-and-groove mechanism on the real machine, see \cite{unkvmatreview}), so for the remainder of the algorithm development, we consider only a single leaf row, and therefore drop the $i$ superscript. Let $f(x)$ be the target fluence that should be delivered for that row. Note if $f$ is obtained from an optimized fluence map $m$ it is piecewise constant, but in general $f$ can also be smooth. We assume the total allowed treatment delivery time $T$ is given. Our goal is then to compute the dose rate $d(t)$ (outer loop) and the leaf trajectories $x_L(t)$ and $x_R(t)$ (inner loop) to recreate the fluence row $f(x)$ as best as possible, while accounting for maximum leaf speed, maximum dose rate, and collision constraints. We chose to focus on the leaf trajectory optimization in this report; the outer loop dose rate search is described in \ref{CMAES}.
 
 The fluence achieved at each position is $g(x)$, which is the time-integral of the dose rate for the times that position is exposed to the radiation source.
 The time domain of exposure $\mathcal{T}(x)$ is the set of times (in general a disconnected set) when the position $x$ is not blocked by either of the leaves, i.e.,
@@ -140,27 +139,23 @@ that minimize the squared integral error between the target fluence $f(x)$ and t
 
 Next we describe the method that we use to convert this mathematical optimization problem into a format that can be solved using standard nonlinear programming (NLP) solvers such as FMINCON \cite{MatlabOptimizationToolbox2014}, SNOPT \cite{Snopt7}, or IPOPT \cite{Wachter2006}.
 
-The first step in this process is to select a discrete representation for the leaf and dose rate trajectories, for which we use piecewise linear functions. The second step is to compute the integrals in the objective function using methods that are smooth and consistent, a critical step for obtaining good results from the NLP solver.
+The first step in this process is to select the computational representation for the leaf and dose rate trajectories, for which we use piecewise linear functions. The second step is to compute the integrals in the objective function using methods that are smooth and consistent, a critical step for obtaining good results from the NLP solver.
 
 \subsection{Spline Representation}
 
 There are three continuous functions that must be computed by the optimization: the position of the left and right leaves, $x_L(t)$ and $x_R(t)$, and the dose rate $d(t)$. We use piecewise linear functions (linear splines) to represent each function. A linear spline is fully defined by its value at the knot points $t_k$: $x_{L,k}$, $x_{R,k}$, and $d_k$. For simplicity we choose to use the same set of knot points for all three splines. An example of a linear spline is shown in Figure \ref{fig:linearSpline}.
 
-\begin{figure}
-  \centering
-  \includegraphics{fig/linearSpline.pdf}
-  \caption{Linear Spline. We represent the dose rate and leaf position trajectories as linear splines. A linear spline is fully defined by its values at the knot points. }
-  \label{fig:linearSpline}
-\end{figure}
+\input{fig/linearSpline2}
 
 \subsection{Integral Computation with Blocking Function k()}
 \label{sec:IntegralComputationWithBlockingFunction}
 
 There are two issues with computing the integral in Equation \ref{eqn:fluenceMapOptimization} directly: 1) computing the domain $\mathcal{T}(x)$ requires a root solve (or inverting the leaf trajectories), and 2) the domain of $\mathcal{T}(x)$ can change from being simply connected to discontinuous during an optimization. Both of these issues would likely cause convergence failures in the NLP solver, in part by causing a change in the sparsity pattern of the gradient
-(\textit{e.g.} $\tfrac{\partial g}{\partial x_L})$)
+%(\textit{e.g.} $\tfrac{\partial g}{\partial x_L}$)
+%craft: i took this out because I think we mean gradient of the objective function, which as yet has not been named: below we call it J. I think it's fine to just leave this commented out though
 between successive iterations.
 
-Our solution is to rewrite the integral using a blocking function $k(t,x)$, which has a value of one when the leaves at time $t$ are passing radiation at location $x$ and zero when the leaves are blocking radiation. This allows us to rewrite the integral using the constant bounds $[0, T]$:
+Our first step is to rewrite the integral using a blocking function $k(t,x)$, which has a value of one when the leaves at time $t$ are passing radiation at location $x$ and zero when the leaves are blocking radiation. This allows us to rewrite the integral using the constant bounds $[0, T]$:
 
 \begin{equation}
   g(x) = \int_{t=0}^T \! k(t, x) \cdot d(t) \, dt
@@ -201,7 +196,7 @@ Figure \ref{fig:visualizeExponentialSmoothing} shows three values of the smoothi
 \begin{figure}
   \centering
   \includegraphics[width=\textwidth]{fig/FIG_visualize_exponential_smoothing.pdf}
-  \caption{Visualization of smoothing parameters in the blocking function (\ref{eqn:blockingFunction}. The right and left leaves are at $x_R = 1$ cm and $x_L = -1$ cm respectively. The solid black line shows the case without smoothing, and the remaining lines show light smoothing ($\Delta = 0.05$ cm), moderate smoothing ($\Delta = 0.2$ cm), and heavy smoothing $\Delta = 0.5$ cm). In each of these three cases we use a value of $\gamma = 0.95$.}
+  \caption{Visualization of smoothing parameters in the blocking function (\ref{eqn:blockingFunction}). The right and left leaves are at $x_R = 1$ cm and $x_L = -1$ cm respectively. The solid black line shows the case without smoothing, and the remaining lines show light smoothing ($\Delta x = 0.05$ cm), moderate smoothing ($\Delta x = 0.2$ cm), and heavy smoothing ($\Delta x = 0.5$ cm). In each of these three cases we use a value of $\gamma = 0.95$.}
   \label{fig:visualizeExponentialSmoothing}
 \end{figure}
 
@@ -278,63 +273,211 @@ The performance of the optimization, based on solve-time and accuracy, is highly
 This dependency on smoothing is common in trajectory optimization, and there is a well known solution: iterative refinement. The idea is to initially solve the optimization using heavy smoothing, which gives a solution that is somewhat close to the true optimal solution. Then the optimization is solved again, using the previous solution as the initial guess and with a smaller value of the smoothing parameter. This process is continued until the error in the objective function decreases to an acceptable level \cite{Srinivasan2006}.
 
 \section{Results}
+The method is demonstrated using a fluence map that is generated for the prostate patient with lymph nodes publically available via the CORT data set, see Figure \ref{fig:targetmap} \cite{CORT14}.
+The bixel width is 1 cm.
+First, we demonstrate the inner loop of our method using two fluence profiles, one with a unimodal and one with a bimodal shape and which correspond to the 12th respectively 11th row of this fluence map. 
+These fluence profiles are depicted in Figure \ref{fig:sps_umt_prof}) respectively Figure \ref{fig:sps_bmt_prof}).
 
-\subsection{Smoothing Parameter iteration schedule}
+% thas has a unimodal shape (12th row) and one thas has a bimodal shape (11th row) that have a unimodal (see Figure \ref{fig:sps_umt_prof}) and bimodal (see Figure \ref{fig:sps_bmt_prof}) shape and correspond to the 12th respectively 11th row of this fluence map.
+%The method is demonstrated using two fluence profiles, both generated for the prostate patient with lymph nodes publically available via the CORT data set \cite{CORT14}. The fluence profiles have a unimodal (see Figure \ref{fig:sps_umt_prof}) and bimodal (see Figure \ref{fig:sps_bmt_prof}) structure and correspond to the 12th respectively 11th row of the second fluence map optimized for that patient. The dose rate is set to its maximum level (we assume 10 MU/s) at every moment in time.
 
-One of the key parameters in the optimization is the smoothing parameter $\alpha$, which we compute here using equation (\ref{eqn:SmoothingDistanceParameter}), using a characteristic smoothing width $\Delta x$ and a parameter $\gamma$ that describes how much the blocking function changes over that smoothing width. 
+Next, we demonstrate the overall method on the entire fluence map depicted in Figure \ref{fig:targetmap}.
+For the dose rate search in the outer loop of our method, we simply set the dose rate level to its maximum level at every moment in time, as is popular in clinical practice. (REFERENCES?)
+In the inner loop we then sequentially solve the leaf trajectory optimization problem for each row of the entire (near-unimodal) fluence map and its transposed (near-bimodal) version. 
 
-For this experiment we set a constant $\gamma = 0.95$ and then study three values for the ``smoothing distance'' $\Delta x = \{0.5, 0.2, 0.05\}$ cm. We compute the optimal leaf trajectory pair for two example fluence profiles, one with a unimodal structure and one with a bimodal structure (see Figures \ref{fig:smoothingParamSweep_unimodalTraj} and \ref{fig:smoothingParamSweep_bimodalTraj}). In each case we use $n=6$ grid points on the leaf trajectories.
+We assume a maximum leaf speed of 3 cm/s and a maximum dose rate of 10 MU/s. 
+The performance is evaluated based on the fluence profile (fluence map) matching quality of the final solution, measured by the sum of squared integral errors (\ref{eqn:fluenceMapOptimization}) over all leaf rows considered, and the CPU time the algorithm needs to terminate.
+Computations are performed in Matlab on a desktop computer with a 3.4GHz quad-core Intel i5-3570K processor.
 
-We explore each possible sequence of smoothing iterations for these three parameters. In general, it would be possible to automate this refinement, but simply starting heavy smoothing and then decreasing the smoothing on successive iterations until a desired accuracy is achieved.
+\DCcomment{It is unclear why we are first doing single rows and then entire maps. If this is actually what we will do we should motivate this choice/explain why we are doing it. Koos: better like this?}
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{fig/FIG_smoothingParamSweep_pareto.pdf}
-  \caption{Comparison of the optimization for two different fluence profiles (See Figures \ref{fig:smoothingParamSweep_unimodalTraj} and \ref{fig:smoothingParamSweep_bimodalTraj}) for a variety of smoothing parameter iteration schedules. The resulting solutions are evaluated based on CPU time and objective value: fitting error computed without smoothing.}
+  \includegraphics[]{fig/FIG_origMap_numbered.png}
+  \caption{Target map with bixels of 1cm wide.}
+  \label{fig:targetmap}
+\end{figure}
+
+All of the experiments in this report use six knot points (five segments) for the leaf trajectories.
+\KvAcomment{Didn't we decide to let the number of knot points be a linear function of the available delivery time? If we indeed use a constant number of segments, this easily explains why we do not perform so well for large delivery times. I am not sure if picking a constant number of knot points is a defensible choice, especially as using a number that increases in T makes sense and should be easily implemented. What do both of you think?}
+\MPKcomment{Modifying the number of knot points adds extra complexity that is tricky to deal with in a thorough way if we are varying the time, although it is simple to implement. I had two primary reasons for leaving it fixed. 1) It avoids the discontinuity in terms of total duration being continuous and the number of knot points being discrete: how to pick threshold at which to add another knot? 2) Keeping the number of knot points fixed provides a constant limit on complexity for all durations. For example, there is no good reason that a long trajectory should be allowed more complexity than a short one. The reason to use six, rather than 10-20, is that I found 
+the optimization would get stuck in local minima more often when additional knot points
+were added, and the overall performance (fitting) did not get much better. If we had tons of time (both for the optimization and for the paper), then it is certainly better to have more points, but I don't think that the trade-off in CPU time is worth the marginal improvent in accuracy. The correct way to do this is with mesh refinement, but that goes well beyond the scope of this paper.}
+This was  chosen  using  a  pilot  study.  
+If  fewer  knot points were  used,  then  the  ability  to  fit  arbitrary  profiles  was diminished.   
+If  more  knot points  were  used  then  there  was  a  minor  improvement  in  fitting,  but  a  significant increase in computational time and it was more difficult to find a viable smoothing schedule.
+
+%Story outline:
+%- Single row: (T=5 sec)
+%+ First show how various smoothing parameter schemes work, then pick one for the remainder;
+%+ Show algorithm progress and highlight that we pick cdhe best and not the last solution;
+%+ Show the leaf trajectories in this best solution and corresponding delivered fluence profile + discuss
+%- Multi row:
+%+ ... 
+
+\subsection{Picking a Smoothing Parameter Schedule}
+Before the algorithm can be ran, a smoothing parameter scheme - a sequence of smoothing parameter values $\alpha$ - has to be chosen.
+Each smoothing parameter value is derived from $\gamma$ and $\Delta x$ using equation (\ref{eqn:SmoothingDistanceParameter}) and holds during a certain stage of the algorithm. 
+We choose to use a constant $\gamma = 0.95$ and study three values for the smoothing distance $\Delta x = \{0.5, 0.2, 0.05\}$ cm.
+We explore each possible sequence of smoothing stages for these three parameters for which the level of smoothing decreases, that is, the accuracy increases.
+The algorithm transfers from one smoothing stage to the next (or terminates if the current stage is the last stage) when the non-linear programming solver (FMINCON) reaches a specified optimality tolerance (in this case set to $10^-4$). The algorithm uses a warm start for all but the first iteration, using the solution from the previous iteration to initialize the current iteration. The only different between the optimizaiton in two successive runs is the smoothing distance $\Deltax$.
+
+% [replaced by KvA, 27-04-2018]
+%One of the key parameters in the optimization is the smoothing parameter $\alpha$, which we compute using equation (\ref{eqn:SmoothingDistanceParameter}).
+%%, using a characteristic smoothing width $\Delta x$ and a parameter $\gamma$ that describes how much the blocking function changes over that smoothing width. 
+%%craft: commenting this out because we already explained it
+%For this experiment we set a constant $\gamma = 0.95$ and then study three values for the smoothing distance $\Delta x = \{0.5, 0.2, 0.05\}$ cm.
+%We explore each possible sequence of smoothing iterations for these three parameters. In general, it would be possible to automate this refinement, but simply starting heavy smoothing and then decreasing the smoothing on successive iterations until a desired accuracy is achieved works well.
+
+\DCcomment{This part about testing various smoothing sequences is unclear. for a schedule like .5 $\to$ .2 $\to$ .05, do we run each optimization until matlab decides it's converted, and then lower the param and warmstart. if so, let's just explicitly say that. also, these results are a bit hard to interpret...i.e. not clear which is the best. is there anything esle we can say about these results? for the first results we present, they are not very strong/striking, we could consider moving them to later.}
+\KvAcomment{David, the "lower the param and warmstart" part is explained in Section 2.4, right? I believe what remains is to state the exact stopping criteria (per stage) used. Matthew, could you add that? I am not sure if I agree on the visualization remark. It is not clear which scheme is the best, because we measure algorithm performance based on final obj value and CPU time and haven't defined relative importance e.g., via weight factors. Do you think we have to?}
+\MPKcomment{I updated the convergence criteria and added a note about warm start. I agree that the results are a bit tricky to interpret. I'm open to suggestions for changing how they are presented.}
+
+
+\begin{figure*}[t!]
+    \centering
+    \begin{subfigure}[b]{0.5\textwidth}
+        \centering
+        \includegraphics[width=0.5\textwidth]{fig/FIG_smoothingParamSweep_pareto_1.pdf}
+        \caption{Unimodal case.}
+    \end{subfigure}%
+    ~ 
+    \begin{subfigure}[b]{0.5\textwidth}
+        \centering
+        \includegraphics[width=0.5\textwidth]{fig/FIG_smoothingParamSweep_pareto_2.pdf}
+        \caption{Bimodal case.}
+    \end{subfigure}
+    \caption{Comparison of smoothing parameter schemes based on the non-smoothed objective value of the final solution and CPU time, for both the unimodal (left panel) and bimodal (right panel) fluence profiles using $T=5$ seconds of delivery. }
   \label{fig:smoothingParamSweep_pareto}
-\end{figure}
+\end{figure*}
 
 
-\subsection{Leaf trajectory plots for two examples}
 
-In the previous section we showed a comparison of the objective function values for various smoothing schedule. Here we select a single smoothing schedule ($\Delta = 0.5 \to 0.2$) and show the optimal leaf trajectories for both the unimodal and bimodal examples.
+% \begin{figure}[h!]
+%   \centering
+%   \includegraphics[width=\textwidth]{fig/FIG_smoothingParamSweep_pareto.pdf}
+%   \caption{Comparison of smoothing parameter schemes based on the non-smoothed objective value of the final solution and CPU time, for both the unimodal (left panel) and bimodal (right panel) fluence profiles using $T=??$ seconds of delivery. }
+%   \caption{Comparison of the optimization for two different fluence profiles (See Figures \ref{fig:smoothingParamSweep_unimodalTraj} and \ref{fig:smoothingParamSweep_bimodalTraj}) for a variety of smoothing parameter iteration schedules. The resulting solutions are evaluated based on CPU time and objective value: fitting error computed without smoothing.}
+% \end{figure}
+
+\KvAcomment{Matthew, I would split these plots into separate figures without title in higher quality so that we can load them into latex and add subcaption there. Also, one legend is sufficient. If it is up to me picking a smoothing schedule in this way is okay, but we should then at least mention in the discussion or recommendation part that it would be better do so by looking at results for multiple rows (and/or average over mutliple runs, reducing the effect of fmincon's randomness.
+Could we also at the "no smoothing" solution to this plot? That would be great to assess the effectively of smoothing.}
+\MPKcomment{ $\to$ Koos:  I ran the optimization again, adding a 0.1 mm smoothing width, which is effectively zero smoothing. This optimization clearly gets stuck in a local minima and FMINCON terminates thinking that there is no improvement to be made. I removed the legend from one of the figures and made them into two plots. I'm not sure how to make the width work so that both plots are a reasonable size. I'm happy to write a few sentences about the smoothing parameter choice - where do you think is best to add it?}
+
+Figure \ref{fig:smoothingParamSweep_pareto} shows the optimization results for each of the smoothing parameter schemes,  represented by the objective value of the final solution and CPU time, under a moderate (??) delivery time of $T=$ 5 seconds. 
+It shows that heavy smoothing (large $\Delta x$) results in fast optimization but poor fitting, whereas light smoothing results in slow optimization as well as poor fitting.
+The best solutions were obtained by starting with heavy smoothing and then moving to moderate smoothing.
+These solutions require a moderate amount of CPU time but tend to be more accurate than most other methods.
+We decide to use the $ 0.5 \rightarrow 0.2 $ smoothing scheme in subsequent experiments.
+Note that adding a stage to a schedule does not in general imply that the optimization needs more CPU time to terminate (see e.g. the $0.5 \rightarrow 0.2$ and $0.5$ schedules for the unimodal profile case), as the runs are performed independently and contain random components.
+
+\subsection{Progress of the Algorithm}
+For the $0.5 \rightarrow 0.2$ smoothing scheme and $T=5$ seconds of delivery,
+    Figures \ref{fig:CPUvsObj_bestalpha_uni} and \ref{fig:CPUvsObj_bestalpha_bi} shows the quality of the current solution as the algorithm proceeds,
+    for the unimdal and bimodal case, respectively.
+For the unimodal case the algorithm spends most of its time in the first smoothing stage, for the bimodal case the computational effort is more evenly spread over the stages.
+
+By definition, the objective value of the best known solution - evaluated at the holding smoothing level (blue line) - is decreasing in CPU time withing every stage of the algorithm.
+At the start of a new stage, an improvement in the smoothed objective value typically results in an improvement in the exact objective value as well.
+Later on, when improvements in the smoothed objective value are smaller, the corresponding effect on the exact objective value can be of either sign but is generally small. 
+Naturally, when transitioning from one smoothing stage to another, the smoothed objective value instantly changes whereas the corresponding exact objective value is unaltered.
+
+In general it is not guaranteed that the exact objective value of the last found solution (green line) is the best solution.
+Therefore, we not only keep track of the current solution and its objective value at the holding smoothing level, but also track the solution with the best exact objective value, and at termination accept the latter as our final solution.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{fig/FIG_smoothingParamSweep_unimodalTraj.pdf}
-  \caption{The optimal leaf trajectories for the unimodal example problem, computed using the smoothing schedule ($\Delta = 0.5 \to 0.2$). The right plot shows the leaf trajectories, and the left plot shows the target and delivered fluence for a constant dose rate.}
-  \label{fig:smoothingParamSweep_unimodalTraj}
-\end{figure}
-
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{fig/FIG_smoothingParamSweep_bimodalTraj.pdf}
-  \caption{The optimal leaf trajectories for the bimodal example problem, computed using the smoothing schedule ($\Delta = 0.5 \to 0.2$). The right plot shows the leaf trajectories, and the left plot shows the target and delivered fluence for a constant dose rate.}
-  \label{fig:smoothingParamSweep_bimodalTraj}
-\end{figure}
-
-\subsection{Objective function value during the optimization}
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{fig/CPUvsObj_Pr-2-row11-bi_Smooth-05-02.pdf}
-  \caption{Relation between CPU time and the best known smoothed objective value and the corresponding exact objective value, for the parameter scheme ($\Delta x= 0.5 \to 0.2$) and the unimodal fluence profile (see Figure \ref{fig:smoothingParamSweep_unimodalTraj})}
+  \includegraphics[width=\textwidth]{fig/FIG_uni_05-02_T5_CPUvsObj.pdf}
+  \caption{Relation between CPU time and the best known smoothed objective value and the corresponding exact objective value, for the parameter scheme ($\Delta x= 0.5 \to 0.2$) and the unimodal fluence profile (see Figure \ref{fig:smoothingParamSweep_unimodalTraj}), with $T=5$s.}
   \label{fig:CPUvsObj_bestalpha_uni}
 \end{figure}
 
-\subsection{Objective function value during the optimization}
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{fig/CPUvsObj_Pr-2-row11-bi_Smooth-05-02.pdf}
-  \caption{Relation between CPU time and the best known smoothed objective value and the corresponding exact objective value, for the parameter scheme ($\Delta x= 0.5 \to 0.2$) and the bimodal fluence profile (see Figure \ref{fig:smoothingParamSweep_bimodalTraj})}
+  \includegraphics[width=\textwidth]{fig/FIG_bi_05-02_T5_CPUvsObj.pdf}
+  \caption{Relation between CPU time and the best known smoothed objective value and the corresponding exact objective value, for the parameter scheme ($\Delta x= 0.5 \to 0.2$) and the bimodal fluence profile (see Figure \ref{fig:smoothingParamSweep_bimodalTraj}), with $T=5$s.}
   \label{fig:CPUvsObj_bestalpha_bi}
 \end{figure}
 
+\subsection{Leaf Trajectories}
+Next, we examine how these solutions look like. 
+Figures \ref{fig:smoothingParamSweep_unimodalTraj} and \ref{fig:smoothingParamSweep_bimodalTraj} show the fluence profile (left panel) delivered by the leaf trajectories of the final solution (right panel) for the unimodal and bimodal case, respectively.
+In the unimodal case, the targeted fluence profile is almost perfectly matched, using a final solution in which leaves move in a near-unidirectional fashion.
+If the delivery time would be larger than or equal to the SWLS row delivery time (5.8s), perfect delivery could be achieved with a unidirectional fashion.
+When little short on time and having a profile in which a lot of fluence is required at the (right) edge,
+    it makes sense to at some point rush the right leaf to the right edge of the field and modulate the right side of the fluence map using the left leaf when short on time.
+    
+In the bimodal case the matching not as close but still reasonably good. 
+Again, the leaves again move in a near-unidirectional like fashion.
+This illustrates that unidirectional leaf trajectories are a good starting point even when the available time is somewhat lower than the SWLS row delivery time (6.7s in this case).
+Mismatches occur at the boundaries of the field and at the dip in the fluence profile.
+In order to modulate the dip in the fluence profile, the leaves would have to fully close, by which the leaves would, with restricted time as is, not be able to modulate other parts, for which the price of not spending sufficient time there is higher.
+Naturally, the bounds of the field are harder to deliver as there is less flexibility in how and when to expose these parts to radiation. % how = leaf position combi's leaving this positon open, when = time.
+
+\begin{figure}[h]
+  \centering
+  \begin{subfigure}[b]{0.5\linewidth}
+    \centering\includegraphics[width=0.9\linewidth]{fig/FIG_uni_05-02_T5_profile.pdf}
+    \caption{\label{fig:sps_umt_prof}}
+  \end{subfigure}%
+  \begin{subfigure}[b]{0.5\linewidth}
+    \centering\includegraphics[width=0.9\linewidth]{fig/FIG_uni_05-02_T5_trajectory.pdf}
+    \caption{\label{fig:sps_umt_traj}}
+  \end{subfigure}
+  \caption{Within $T=5$ seconds of delivery, the unimodal target profile (solid line, left panel) is closely matched (dashed line, left panel) by the leaf trajectories displayed in the right panel. These trajectories are found by optimization using the ($\Delta x = 0.5 \to 0.2$) smoothing schedule.}
+  \label{fig:smoothingParamSweep_unimodalTraj}
+  %\includegraphics[width=\textwidth]{fig/FIG_smoothingParamSweep_unimodalTraj.pdf}
+  %\caption{The optimal leaf trajectories for the unimodal example problem, computed using the smoothing schedule ($\Delta = 0.5 \to 0.2$). The right plot shows the leaf trajectories, and the left plot shows the target and delivered fluence for a constant dose rate.}
+\end{figure}
+
+\todo{Koos selfnote: use the same XLabel and XTickLabels for both panels (2x)}
+
+% [removed by KvA, 27-04-2018]
+% In the previous section we showed a comparison of the objective function values for various smoothing schedule. Here we select a single smoothing schedule ($\Delta x = 0.5 \to 0.2$) and show the optimal leaf trajectories for both the unimodal and bimodal examples.
+
+\begin{figure}[h]
+  \centering
+  \begin{subfigure}[b]{0.5\linewidth}
+    \centering\includegraphics[width=0.9\linewidth]{fig/FIG_bi_05-02_T5_profile.pdf}
+    \caption{\label{fig:sps_bmt_prof}}
+  \end{subfigure}%
+  \begin{subfigure}[b]{0.5\linewidth}
+    \centering\includegraphics[width=0.9\linewidth]{fig/FIG_bi_05-02_T5_trajectory.pdf}
+    \caption{\label{fig:sps_bmt_traj}}
+  \end{subfigure}
+  \caption{Within $T=5$ seconds of delivery, the bimodal target profile (solid line, left panel) is closely matched (dashed line, left panel) by the leaf trajectories displayed in the right panel. These trajectories are found by optimization using the ($\Delta x = 0.5 \to 0.2$) smoothing schedule.}
+  \label{fig:smoothingParamSweep_bimodalTraj}
+ % \includegraphics[width=\textwidth]{fig/FIG_smoothingParamSweep_bimodalTraj.pdf}
+  % \caption{The optimal leaf trajectories for the bimodal example problem, computed using the smoothing schedule ($\Delta = 0.5 \to 0.2$). The right plot shows the leaf trajectories, and the left plot shows the target and delivered fluence for a constant dose rate.}
+\end{figure}
+
+\section{Matching an Entire Fluence Map}
+\KvAcomment{Stopped here, need to mention:
+We know the fluence map and its transposed version can be perfectly matched using the SWLS approach in 6.7 and 8.6 seconds respectively.}
+\MPKcomment{We should definitely mention this in the paper and cite at least one reference for it. }
+
+
+\subsection{Trade-off between delivery time and solution quality}
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{fig/FIG_unimap_05-02_TvsObj.pdf}
+  \caption{Solution to the problem of matching the entire fluence map (see Figure \ref{fig:targetmap}), for various delivery times. The vertical axis of the graph shows the exact objective function that is minimized. For each integer second of delivery time, the delivered fluence map is shown. The blue triangle represents the SWLS time (6.7s)}
+  \label{fig:TvsObj_bestalpha_uni}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{fig/FIG_bimap_05-02-TvsObj.pdf}
+  \caption{Solution to the problem of matching the entire, transposed fluence map (see Figure \ref{fig:targetmap}), for various delivery times. The vertical axis of the graph shows the exact objective function that is minimized. For each integer second of delivery time, the delivered fluence map is shown. The blue triangle represents the SWLS time (8.6s)}
+  \label{fig:TvsObj_bestalpha_bi}
+\end{figure}
+\todo{Koos: replace ssdiff in figures, perhaps make one figure with two panels from this?}
+
 \todo{All: finetune figures}
-\todo{Koos: explain/interpret figures}
+\todo{Koos: explain/interpret full map figures}
 
 \section{Discussion and conclusions}
-
+\KvAcomment{I moved over parts of this section to the results section but left this section yet untouched.}
 \subsection{Smoothing schedule}
 
 The various smoothing schedules can be analyzed on a pareto front, with a trade-off between CPU time and the value of the objective function. Heavy smoothing (large $\Delta$) results in fast optimization but poor fitting. Light smoothing results in slow optimization as well as poor fitting. The best solutions were obtained by starting with heavy smoothing and then moving to moderate smoothing. These solutions required a moderate amount of CPU time but tended to be more accurate than other methods.
@@ -345,10 +488,11 @@ In all of the optimizations we used a smooth objective function for the optimiza
 
 \todo{Koos: discuss your plot for obj. val. vs time here?}
 \KvAcomment{Matthew: I think these plots better fit in the previous section. We could directly discuss the figures there.}
+\MPKcomment{Sounds good - it looks like you moved them already?}
 
 \subsection{Fitting performance}
 
-For simple fluence target profiles we were typically able to obtain the desired fluence profile to within the accuracy of our model. For more complex profiles, such as the bimodel profile shown in the figure \ref{fig:smoothingParamSweep_bimodalTraj}, the fluence target was matched reasonably well, with some small fitting errors near sharp changes in the profile. These errors are in part due to using a small number of linear segments to represetn the leaf trajectories.
+For simple fluence target profiles we were typically able to obtain the desired fluence profile to within the accuracy of our model. For more complex profiles, such as the bimodel profile shown in the figure \ref{fig:smoothingParamSweep_bimodalTraj}, the fluence target was matched reasonably well, with some small fitting errors near sharp changes in the profile. These errors are in part due to using a small number of linear segments to represent the leaf trajectories.
 
 \subsection{Choice of grid-point count}
 
@@ -377,6 +521,8 @@ We performed a brief pilot study, where we compared linear to cubic splines, wit
 \section{Conclusions}
 
 \todo{once we get the rest of the paper written}
+- recommendation: other dose rate search technique (fixed max dose non-optimal)
+- recommendation: automated refinement smoothing parameter scheme
 
 \section{Future Work}
 
