@@ -11,7 +11,7 @@ dataFun = @getCortData;  %{@getCortData, @getSimData}
 
 % Parameters for experiment:
 durationVec = 1:9;  % duration of the leaf trajectories
-nGrid = 6; % number of grid points in the leaf trajectories
+nGrid = 1 + 2*durationVec;  % two segments per second
 dataSetNames = {'unimodal','bimodal'};
 smoothingWidthVec = [0.5, 0.2];  % smoothing width, centimeters
 
@@ -23,8 +23,7 @@ param.guess.defaultLeafSpaceFraction = 0.25;
 param.diagnostics.nQuad = 10*param.nQuad;
 param.diagnostics.alpha = getExpSmoothingParam(0.999, 0.001);
 param.fmincon = optimset(...
-    'Display', 'iter',...
-    'TolFun', 1e-4);
+    'Display', 'iter');
 
 % Set up the results structure:
 guess = [];
@@ -52,7 +51,7 @@ for iDataSet = 1:nDataSet
         
         % Set up the dose structure:
         duration = durationVec(iDuration);
-        dose.tGrid = linspace(0, duration, nGrid);
+        dose.tGrid = linspace(0, duration, nGrid(iDuration));
         dose.rGrid = data.maxDoseRate * ones(size(dose.tGrid));
         
         % Solve the optimization!
@@ -87,10 +86,10 @@ end
 legendText = cell(nDuration, 1);
 for iDuration = 1:nDuration
     val = durationVec(iDuration);
-    legendText{iDuration} = ['T = ', num2str(val)];
+    legendText{iDuration} = ['T = ', num2str(val), 's'];
 end
 
-% Generate a simple figure with bar charts
+%% Generate a simple figure with bar charts
 figure(2342); clf;
 hSub(1) = subplot(1,3,1);
 bar(Result.objVal);
@@ -113,13 +112,14 @@ setFigureSize('wide')
 save2pdf('FIG_totalDurationSweep_barChart.pdf')
 linkaxes(hSub,'y');
 
-% Create a pareto-front chart:
+%% Create a pareto-front chart:
 figure(2253); clf;
+colors = parula(nDuration);
 for iDataSet = 1:nDataSet
     hSub(iDataSet) = subplot(1,nDataSet,iDataSet); hold on;
     for iDuration = 1:nDuration
         plot(Result.cpuTime(iDataSet,iDuration), Result.objExact(iDataSet,iDuration),...
-            'o','MarkerSize',8,'LineWidth',4);
+            'o','MarkerSize',8,'LineWidth',4, 'Color', colors(iDuration, :));
     end
     legend(legendText,'Location','best');
     xlabel('CPU time (s)');

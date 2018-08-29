@@ -26,7 +26,7 @@ for iDataName = 1:length(dataNames)
     
     % Parameters for experiment:
     durationVec = 1:9;  % duration of the leaf trajectories
-    nGrid = 6; % number of grid points in the leaf trajectories
+    nGrid = 1 + 2 * durationVec; % number of grid points in the leaf trajectories
     
     
     smoothingWidthVec = [0.5, 0.2];  % smoothing width, centimeters
@@ -39,8 +39,7 @@ for iDataName = 1:length(dataNames)
     param.diagnostics.nQuad = 10*param.nQuad;
     param.diagnostics.alpha = getExpSmoothingParam(0.999, 0.001);
     param.fmincon = optimset(...
-        'Display', 'final',...
-        'TolFun', 1e-4);
+        'Display', 'final');
     
     % Set up the results structure:
     guess = [];
@@ -69,7 +68,7 @@ for iDataName = 1:length(dataNames)
             
             % Set up the dose structure:
             duration = durationVec(iDuration);
-            dose.tGrid = linspace(0, duration, nGrid);
+            dose.tGrid = linspace(0, duration, nGrid(iDuration));
             dose.rGrid = data.maxDoseRate * ones(size(dose.tGrid));
             
             % Solve the optimization!

@@ -1,0 +1,9 @@
+
+% [replaced by KvA, 27-04-2018]
+%When little short on time and having a profile in which a lot of fluence is required at the (right) edge,
+%    it makes sense to at some point rush the right leaf to the right edge of the field and modulate the right side of the fluence map using the left leaf.
+%\DCcomment{not sure I believe this explanation: I think in this case, since we are using constant dose rate, the last two positions of the left leaf, at 4 and 5 seconds, could be swapped, and we'd get the same fluence map created and a more nearly unidirectional left leaf trajectory. my guess is that this direction switching is just an artifact, and example of multiple optimal solutions.}
+%    \KvAcomment{Mmh, you are right. I forgot about the dose rate being constant for a sec. In fact, as Marleen proved, you can rewrite any pair of leaf trajectories to a pair of unidirectionaly moving trajectories without changing the g(x) and as such the objective value. I'll alter the explanation.}
+
+After the 10 MU/s part:
+% looks fine now   \DCcomment{It is unclear why we are first doing single rows and then entire maps. If this is actually what we will do we should motivate this choice/explain why we are doing it. Koos: better like this?}
